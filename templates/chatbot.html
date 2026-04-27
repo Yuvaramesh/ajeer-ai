@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Chatbot - Ajeer Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chatbot-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 200px);
+        gap: 1rem;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        background-color: #f9f9f9;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .message {
+        display: flex;
+        margin-bottom: 0.5rem;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message.user {
+        justify-content: flex-end;
+    }
+
+    .message.assistant {
+        justify-content: flex-start;
+    }
+
+    .message-content {
+        max-width: 70%;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        word-wrap: break-word;
+    }
+
+    .message.user .message-content {
+        background-color: #007bff;
+        color: white;
+        border-bottom-right-radius: 0;
+    }
+
+    .message.assistant .message-content {
+        background-color: #e9ecef;
+        color: #333;
+        border-bottom-left-radius: 0;
+    }
+
+    .message-info {
+        font-size: 0.75rem;
+        color: #999;
+        margin-top: 0.25rem;
+        padding: 0 1rem;
+    }
+
+    .message.user .message-info {
+        text-align: right;
+    }
+
+    .chat-input-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .chat-input {
+        flex: 1;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+    }
+
+    .chat-input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    .send-btn {
+        padding: 0.75rem 1.5rem;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.3s;
+    }
+
+    .send-btn:hover {
+        background-color: #0056b3;
+    }
+
+    .send-btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .typing-indicator {
+        display: flex;
+        gap: 0.25rem;
+        padding: 1rem;
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #999;
+        animation: typing 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+        0%, 60%, 100% {
+            opacity: 0.5;
+        }
+        30% {
+            opacity: 1;
+        }
+    }
+
+    .agent-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        margin-top: 0.5rem;
+        background-color: rgba(0, 123, 255, 0.2);
+        color: #007bff;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #999;
+        text-align: center;
+    }
+
+    .empty-state h2 {
+        margin-bottom: 1rem;
+        color: #666;
+    }
+
+    .empty-state p {
+        max-width: 400px;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chatbot-container">
+    <div class="card-header" style="margin-bottom: 1rem;">
+        <h1>🤖 Ajeer Chatbot Assistant</h1>
+        <p>Powered by RAG with LangGraph Multi-Agent System</p>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        <div class="empty-state">
+            <h2>Hello!</h2>
+            <p>Ask me anything about Ajeer or our services. I can answer frequently asked questions or provide general assistance.</p>
+        </div>
+    </div>
+
+    <div class="chat-input-group">
+        <input 
+            type="text" 
+            id="userInput" 
+            class="chat-input" 
+            placeholder="Type your message here..."
+            autocomplete="off"
+        >
+        <button id="sendBtn" class="send-btn">Send</button>
+    </div>
+</div>
+
+<script>
+    const chatMessages = document.getElementById('chatMessages');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    let isFirstMessage = true;
+
+    function clearEmptyState() {
+        if (isFirstMessage) {
+            chatMessages.innerHTML = '';
+            isFirstMessage = false;
+        }
+    }
+
+    function addMessage(content, isUser, agentType = null) {
+        clearEmptyState();
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        contentDiv.innerHTML = content;
+        
+        messageDiv.appendChild(contentDiv);
+        
+        if (!isUser && agentType) {
+            const badge = document.createElement('span');
+            badge.className = 'agent-badge';
+            badge.textContent = agentType === 'faq_search' ? '📚 FAQ' : '🧠 AI Generated';
+            contentDiv.appendChild(badge);
+        }
+        
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'message-info';
+        const now = new Date();
+        infoDiv.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        messageDiv.appendChild(infoDiv);
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addTypingIndicator() {
+        clearEmptyState();
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message assistant';
+        messageDiv.id = 'typingIndicator';
+        
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-indicator';
+        
+        for (let i = 0; i < 3; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'typing-dot';
+            typingDiv.appendChild(dot);
+        }
+        
+        messageDiv.appendChild(typingDiv);
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const indicator = document.getElementById('typingIndicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        
+        if (!message) return;
+        
+        // Add user message
+        addMessage(message, true);
+        userInput.value = '';
+        sendBtn.disabled = true;
+        
+        // Show typing indicator
+        addTypingIndicator();
+        
+        try {
+            const response = await fetch('{{ url_for("chat") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: message })
+            });
+            
+            const data = await response.json();
+            
+            removeTypingIndicator();
+            
+            if (data.success) {
+                // Format response with line breaks
+                const formattedResponse = data.response
+                    .split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line)
+                    .join('<br>');
+                
+                addMessage(formattedResponse, false, data.agent_type);
+            } else {
+                addMessage('Sorry, an error occurred: ' + (data.error || 'Unknown error'), false);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            removeTypingIndicator();
+            addMessage('Sorry, I encountered a connection error. Please try again.', false);
+        }
+        
+        sendBtn.disabled = false;
+        userInput.focus();
+    }
+
+    // Event listeners
+    sendBtn.addEventListener('click', sendMessage);
+    
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // Focus input on load
+    userInput.focus();
+
+    // Disable send button initially
+    sendBtn.disabled = false;
+</script>
+{% endblock %}

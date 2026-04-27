@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Ajeer{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Welcome, {{ username }}!</h1>
+        <p class="dashboard-subtitle">Your Ajeer Dashboard</p>
+        <div class="user-info">
+            <span class="info-badge">Country: {{ country }}</span>
+            <span class="info-badge">Currency: {{ currency }}</span>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Currency Converter Card -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2>💱 Currency Converter</h2>
+            </div>
+            <div class="card-body">
+                <div class="currency-converter">
+                    <div class="converter-group">
+                        <label>Amount</label>
+                        <input 
+                            type="number" 
+                            id="amount" 
+                            placeholder="Enter amount"
+                            value="100"
+                            min="0"
+                            step="0.01"
+                            class="form-input"
+                        >
+                    </div>
+
+                    <div class="converter-group">
+                        <label>From Currency</label>
+                        <select id="fromCurrency" class="form-input">
+                            <option value="{{ currency }}" selected>{{ currency }}</option>
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="JPY">JPY - Japanese Yen</option>
+                            <option value="INR">INR - Indian Rupee</option>
+                            <option value="AED">AED - UAE Dirham</option>
+                            <option value="SAR">SAR - Saudi Riyal</option>
+                        </select>
+                    </div>
+
+                    <div class="converter-group">
+                        <label>To Currency</label>
+                        <select id="toCurrency" class="form-input">
+                            <option value="USD" selected>USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="JPY">JPY - Japanese Yen</option>
+                            <option value="INR">INR - Indian Rupee</option>
+                            <option value="AED">AED - UAE Dirham</option>
+                            <option value="SAR">SAR - Saudi Riyal</option>
+                        </select>
+                    </div>
+
+                    <button id="convertBtn" class="btn btn-primary btn-block">Convert</button>
+
+                    <div id="conversionResult" class="conversion-result" style="display: none;">
+                        <p>
+                            <span id="resultAmount" class="amount">0</span>
+                            <span id="resultCurrency" class="currency">USD</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chatbot Card -->
+        <div class="dashboard-card chatbot-card">
+            <div class="card-header">
+                <h2>🤖 Chatbot Assistant</h2>
+            </div>
+            <div class="card-body chatbot-preview">
+                <p class="chatbot-description">Need help? Talk to our intelligent chatbot powered by RAG technology.</p>
+                <p class="chatbot-features">
+                    <span class="feature">FAQ Search</span>
+                    <span class="feature">Smart Responses</span>
+                    <span class="feature">24/7 Available</span>
+                </p>
+                <a href="{{ url_for('chatbot') }}" class="btn btn-primary btn-block">Open Chatbot</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <h3>Quick Stats</h3>
+            <div class="stats-content">
+                <p id="chatCountDisplay">Conversations: <span>0</span></p>
+                <p id="lastConvDisplay">Last Chat: <span>Never</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Currency Converter
+    document.getElementById('convertBtn').addEventListener('click', async () => {
+        const amount = parseFloat(document.getElementById('amount').value);
+        const fromCurrency = document.getElementById('fromCurrency').value;
+        const toCurrency = document.getElementById('toCurrency').value;
+        
+        if (!amount || amount <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
+        
+        try {
+            const response = await fetch('{{ url_for("convert_currency") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    amount: amount,
+                    from_currency: fromCurrency,
+                    to_currency: toCurrency
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('resultAmount').textContent = 
+                    data.converted_amount.toLocaleString('en-US', { maximumFractionDigits: 2 });
+                document.getElementById('resultCurrency').textContent = data.target_currency;
+                document.getElementById('conversionResult').style.display = 'block';
+            } else {
+                alert('Conversion failed: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred during conversion');
+        }
+    });
+
+    // Load user stats
+    async function loadStats() {
+        try {
+            const response = await fetch('{{ url_for("get_user_profile") }}');
+            const data = await response.json();
+            
+            if (data.success) {
+                const createdDate = new Date(data.created_at);
+                document.getElementById('chatCountDisplay').innerHTML = 
+                    `Conversations: <span id="chatCount">0</span>`;
+                document.getElementById('lastConvDisplay').innerHTML = 
+                    `Account Created: <span>${createdDate.toLocaleDateString()}</span>`;
+            }
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    }
+
+    // Initialize
+    loadStats();
+    
+    // Allow Enter key to convert
+    document.getElementById('amount').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('convertBtn').click();
+        }
+    });
+</script>
+{% endblock %}

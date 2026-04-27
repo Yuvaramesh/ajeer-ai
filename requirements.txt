@@ -1,0 +1,10 @@
+Flask==3.0.0
+Flask-Login==0.6.3
+PyMongo==4.6.0
+qdrant-client==1.7.1
+python-dotenv==1.0.0
+Werkzeug==3.0.1
+langchain==0.1.10
+langchain-google-genai==0.0.11
+langgraph==0.0.30
+google-generativeai==0.4.1
