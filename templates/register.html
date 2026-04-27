@@ -1,120 +1,370 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Ajeer Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body class="auth-page">
-    <div class="auth-container">
-        <div class="auth-card">
-            <h1 class="auth-title">Create Account</h1>
-            
-            <form id="registerForm" method="POST">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        required
-                        placeholder="Choose a username"
-                        class="form-input"
-                    >
-                    <small class="form-hint">3-20 characters, letters, numbers, - and _</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        required
-                        placeholder="your@email.com"
-                        class="form-input"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        required
-                        placeholder="At least 8 characters"
-                        class="form-input"
-                    >
-                    <small class="form-hint">Must be 8+ chars with uppercase letter and number</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="password_confirm">Confirm Password</label>
-                    <input 
-                        type="password" 
-                        id="password_confirm" 
-                        name="password_confirm" 
-                        required
-                        placeholder="Confirm your password"
-                        class="form-input"
-                    >
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-block">Create Account</button>
-
-                <p class="auth-link">
-                    Already have an account? <a href="{{ url_for('login') }}">Login here</a>
-                </p>
-            </form>
-
-            <div id="error-message" class="alert alert-error" style="display: none;"></div>
-            <div id="success-message" class="alert alert-success" style="display: none;"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ajeer — Register</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --brand: #ff6b35;
+        --brand-dark: #e85a24;
+        --ink: #0d0d0d;
+        --paper: #fafaf8;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --card: #ffffff;
+        --error: #ef4444;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--paper);
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+      .panel-left {
+        background: var(--ink);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 3rem;
+      }
+      .panel-left::before {
+        content: "";
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 500px;
+        height: 500px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 107, 53, 0.3) 0%,
+          transparent 70%
+        );
+      }
+      .brand {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 2rem;
+        color: #fff;
+        letter-spacing: -0.02em;
+        position: relative;
+        z-index: 1;
+      }
+      .brand span {
+        color: var(--brand);
+      }
+      .panel-hero {
+        position: relative;
+        z-index: 1;
+      }
+      .panel-hero h1 {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 3.5rem;
+        line-height: 1.05;
+        color: #fff;
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.03em;
+      }
+      .panel-hero h1 em {
+        font-style: normal;
+        color: var(--brand);
+      }
+      .panel-hero p {
+        font-size: 1.05rem;
+        color: rgba(255, 255, 255, 0.55);
+        line-height: 1.7;
+        max-width: 340px;
+      }
+      .benefits {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .benefit {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+      }
+      .benefit-icon {
+        width: 32px;
+        height: 32px;
+        background: rgba(255, 107, 53, 0.2);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+      }
+      .panel-right {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        overflow-y: auto;
+      }
+      .form-box {
+        width: 100%;
+        max-width: 420px;
+      }
+      .form-box h2 {
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1.9rem;
+        color: var(--ink);
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+      }
+      .form-box > p {
+        color: var(--muted);
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+      }
+      .form-box > p a {
+        color: var(--brand);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .error-msg {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: var(--error);
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        margin-bottom: 1.25rem;
+      }
+      .field {
+        margin-bottom: 1.25rem;
+      }
+      label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--ink);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.5rem;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        color: var(--ink);
+        background: var(--card);
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        outline: none;
+        appearance: none;
+      }
+      input:focus,
+      select:focus {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.12);
+      }
+      select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%236B7280'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 2.5rem;
+      }
+      .currency-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(255, 107, 53, 0.08);
+        border: 1px solid rgba(255, 107, 53, 0.2);
+        color: var(--brand);
+        padding: 0.3rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+      }
+      .btn-register {
+        width: 100%;
+        padding: 0.95rem;
+        background: var(--brand);
+        color: #fff;
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.1s;
+        margin-top: 0.5rem;
+      }
+      .btn-register:hover {
+        background: var(--brand-dark);
+      }
+      .btn-register:active {
+        transform: scale(0.99);
+      }
+      @media (max-width: 768px) {
+        body {
+          grid-template-columns: 1fr;
+        }
+        .panel-left {
+          display: none;
+        }
+        .panel-right {
+          padding: 2rem 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel-left">
+      <div class="brand">Ajeer<span>.</span></div>
+      <div class="panel-hero">
+        <h1>Join the<br /><em>Future</em> of<br />Work.</h1>
+        <p>
+          Access jobs globally, get paid in your local currency, and build your
+          career with Ajeer.
+        </p>
+      </div>
+      <div class="benefits">
+        <div class="benefit">
+          <div class="benefit-icon">🌍</div>
+          Work with international employers
         </div>
+        <div class="benefit">
+          <div class="benefit-icon">💱</div>
+          Real-time currency conversion
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">🤖</div>
+          AI-powered job matching
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">🔒</div>
+          Secure & verified payments
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-right">
+      <div class="form-box">
+        <h2>Create account</h2>
+        <p>Already registered? <a href="/login">Sign in</a></p>
+
+        {% if error %}
+        <div class="error-msg">⚠ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/register">
+          <div class="field">
+            <label>Full Name</label>
+            <input
+              type="text"
+              name="name"
+              placeholder="Ahmed Al-Rashid"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Email Address</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Password</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Min. 6 characters"
+              required
+              minlength="6"
+            />
+          </div>
+
+          <div class="field">
+            <label>Your Country</label>
+            <select
+              name="country"
+              id="countrySelect"
+              required
+              onchange="updateCurrency()"
+            >
+              {% for c in countries %}
+              <option value="{{ c }}">{{ c }}</option>
+              {% endfor %}
+            </select>
+            <div class="currency-badge" id="currencyBadge">
+              💱 USD — US Dollar
+            </div>
+          </div>
+
+          <button class="btn-register" type="submit">
+            Create My Account →
+          </button>
+        </form>
+      </div>
     </div>
 
     <script>
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const passwordConfirm = document.getElementById('password_confirm').value;
-            const errorDiv = document.getElementById('error-message');
-            const successDiv = document.getElementById('success-message');
-            
-            // Reset messages
-            errorDiv.style.display = 'none';
-            successDiv.style.display = 'none';
-            
-            try {
-                const response = await fetch('{{ url_for("register") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, email, password, password_confirm })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    successDiv.textContent = data.message;
-                    successDiv.style.display = 'block';
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 2000);
-                } else {
-                    errorDiv.textContent = data.error;
-                    errorDiv.style.display = 'block';
-                }
-            } catch (error) {
-                errorDiv.textContent = 'An error occurred. Please try again.';
-                errorDiv.style.display = 'block';
-            }
-        });
+      const CURRENCIES = {
+        "United States": { code: "USD", symbol: "$", name: "US Dollar" },
+        India: { code: "INR", symbol: "₹", name: "Indian Rupee" },
+        "United Kingdom": { code: "GBP", symbol: "£", name: "British Pound" },
+        Germany: { code: "EUR", symbol: "€", name: "Euro" },
+        France: { code: "EUR", symbol: "€", name: "Euro" },
+        Japan: { code: "JPY", symbol: "¥", name: "Japanese Yen" },
+        China: { code: "CNY", symbol: "¥", name: "Chinese Yuan" },
+        Canada: { code: "CAD", symbol: "CA$", name: "Canadian Dollar" },
+        Australia: { code: "AUD", symbol: "A$", name: "Australian Dollar" },
+        Brazil: { code: "BRL", symbol: "R$", name: "Brazilian Real" },
+        "Saudi Arabia": { code: "SAR", symbol: "﷼", name: "Saudi Riyal" },
+        UAE: { code: "AED", symbol: "د.إ", name: "UAE Dirham" },
+        Singapore: { code: "SGD", symbol: "S$", name: "Singapore Dollar" },
+      };
+
+      function updateCurrency() {
+        const country = document.getElementById("countrySelect").value;
+        const cur = CURRENCIES[country] || {
+          code: "USD",
+          symbol: "$",
+          name: "US Dollar",
+        };
+        document.getElementById("currencyBadge").textContent =
+          `💱 ${cur.code} — ${cur.name}`;
+      }
+      updateCurrency();
     </script>
-</body>
+  </body>
 </html>

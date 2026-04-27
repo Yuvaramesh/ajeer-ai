@@ -1,318 +1,300 @@
-from flask import Flask, render_template, request, session, redirect, url_for, jsonify
-from flask_login import LoginManager
-from config import config
-from models import Database, UserModel, ConversationModel, FAQModel
-from utils.helpers import AuthHelper, CountryHelper, CurrencyConverter, ValidationHelper
-from agents.rag_agents import RAGAgentSystem
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask_pymongo import PyMongo
+from werkzeug.security import generate_password_hash, check_password_hash
+import google.generativeai as genai
+import requests
 import os
+from datetime import datetime
 from functools import wraps
+from bson import ObjectId
 
-# Initialize Flask app
 app = Flask(__name__)
-app.config.from_object(config[os.getenv('FLASK_ENV', 'development')])
+app.secret_key = os.environ.get("SECRET_KEY", "ajeer-secret-key-2024")
 
-# Initialize database
-db_connection = Database(app.config['MONGODB_URI'])
-db_connection.init_collections()
-db = db_connection.db
-
-# Initialize RAG system
-rag_system = RAGAgentSystem(
-    qdrant_url=app.config['QDRANT_URL'],
-    api_key=app.config.get('QDRANT_API_KEY'),
-    google_api_key=app.config['GOOGLE_API_KEY']
+app.config["MONGO_URI"] = os.environ.get(
+    "MONGO_URI", "mongodb://localhost:27017/ajeer_db"
 )
+mongo = PyMongo(app)
 
-# Session management
-login_manager = LoginManager()
-login_manager.init_app(app)
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "your-gemini-api-key")
+genai.configure(api_key=GEMINI_API_KEY)
+gemini_model = genai.GenerativeModel("gemini-2.5-flash-lite")
+
+COUNTRY_CURRENCY_MAP = {
+    "United States": {"code": "USD", "symbol": "$", "name": "US Dollar"},
+    "India": {"code": "INR", "symbol": "₹", "name": "Indian Rupee"},
+    "United Kingdom": {"code": "GBP", "symbol": "£", "name": "British Pound"},
+    "European Union": {"code": "EUR", "symbol": "€", "name": "Euro"},
+    "Germany": {"code": "EUR", "symbol": "€", "name": "Euro"},
+    "France": {"code": "EUR", "symbol": "€", "name": "Euro"},
+    "Japan": {"code": "JPY", "symbol": "¥", "name": "Japanese Yen"},
+    "China": {"code": "CNY", "symbol": "¥", "name": "Chinese Yuan"},
+    "Canada": {"code": "CAD", "symbol": "CA$", "name": "Canadian Dollar"},
+    "Australia": {"code": "AUD", "symbol": "A$", "name": "Australian Dollar"},
+    "Brazil": {"code": "BRL", "symbol": "R$", "name": "Brazilian Real"},
+    "Mexico": {"code": "MXN", "symbol": "MX$", "name": "Mexican Peso"},
+    "South Africa": {"code": "ZAR", "symbol": "R", "name": "South African Rand"},
+    "Nigeria": {"code": "NGN", "symbol": "₦", "name": "Nigerian Naira"},
+    "Saudi Arabia": {"code": "SAR", "symbol": "﷼", "name": "Saudi Riyal"},
+    "UAE": {"code": "AED", "symbol": "د.إ", "name": "UAE Dirham"},
+    "Singapore": {"code": "SGD", "symbol": "S$", "name": "Singapore Dollar"},
+    "South Korea": {"code": "KRW", "symbol": "₩", "name": "South Korean Won"},
+    "Russia": {"code": "RUB", "symbol": "₽", "name": "Russian Ruble"},
+    "Switzerland": {"code": "CHF", "symbol": "CHF", "name": "Swiss Franc"},
+    "Pakistan": {"code": "PKR", "symbol": "₨", "name": "Pakistani Rupee"},
+    "Bangladesh": {"code": "BDT", "symbol": "৳", "name": "Bangladeshi Taka"},
+    "Indonesia": {"code": "IDR", "symbol": "Rp", "name": "Indonesian Rupiah"},
+    "Malaysia": {"code": "MYR", "symbol": "RM", "name": "Malaysian Ringgit"},
+    "Philippines": {"code": "PHP", "symbol": "₱", "name": "Philippine Peso"},
+    "Thailand": {"code": "THB", "symbol": "฿", "name": "Thai Baht"},
+    "Turkey": {"code": "TRY", "symbol": "₺", "name": "Turkish Lira"},
+    "Egypt": {"code": "EGP", "symbol": "E£", "name": "Egyptian Pound"},
+    "Argentina": {"code": "ARS", "symbol": "$", "name": "Argentine Peso"},
+    "Other": {"code": "USD", "symbol": "$", "name": "US Dollar"},
+}
+
+COUNTRIES = sorted(COUNTRY_CURRENCY_MAP.keys())
 
 
 def login_required(f):
-    """Decorator to require login"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login'))
+        if "user_id" not in session:
+            return redirect(url_for("login"))
         return f(*args, **kwargs)
+
     return decorated_function
 
 
-# ===== Authentication Routes =====
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    """User registration"""
-    if request.method == 'POST':
-        data = request.get_json() if request.is_json else request.form
-        username = data.get('username', '').strip()
-        email = data.get('email', '').strip()
-        password = data.get('password', '')
-        password_confirm = data.get('password_confirm', '')
-        
-        # Validation
-        if not username or not email or not password:
-            return jsonify({'success': False, 'error': 'All fields are required'}), 400
-        
-        username_valid, username_msg = ValidationHelper.validate_username(username)
-        if not username_valid:
-            return jsonify({'success': False, 'error': username_msg}), 400
-        
-        if not ValidationHelper.validate_email(email):
-            return jsonify({'success': False, 'error': 'Invalid email format'}), 400
-        
-        password_valid, password_msg = ValidationHelper.validate_password(password)
-        if not password_valid:
-            return jsonify({'success': False, 'error': password_msg}), 400
-        
-        if password != password_confirm:
-            return jsonify({'success': False, 'error': 'Passwords do not match'}), 400
-        
-        # Check if user exists
-        if UserModel.find_by_email(db, email):
-            return jsonify({'success': False, 'error': 'Email already registered'}), 400
-        
-        if UserModel.find_by_username(db, username):
-            return jsonify({'success': False, 'error': 'Username already taken'}), 400
-        
-        # Get user's country based on IP
-        client_ip = request.remote_addr
-        country_code, country_name = CountryHelper.get_country_from_ip(client_ip)
-        currency = CountryHelper.get_currency_for_country(country_code)
-        
-        # Hash password and create user
-        password_hash = AuthHelper.hash_password(password)
-        user_id = UserModel.create_user(
-            db, username, email, password_hash,
-            country=country_code, preferred_currency=currency
-        )
-        
-        return jsonify({
-            'success': True,
-            'message': 'Registration successful. Please login.',
-            'redirect': url_for('login')
-        }), 201
-    
-    return render_template('register.html')
+def get_exchange_rate(from_currency, to_currency):
+    try:
+        url = f"https://api.exchangerate-api.com/v4/latest/{from_currency}"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get("rates", {}).get(to_currency, 1.0)
+    except Exception as e:
+        print(f"Exchange rate error: {e}")
+    fallback = {
+        "USD": {"INR": 83.5, "GBP": 0.79, "EUR": 0.92, "AED": 3.67, "SAR": 3.75},
+        "INR": {"USD": 0.012, "AED": 0.044, "SAR": 0.045},
+    }
+    return fallback.get(from_currency, {}).get(to_currency, 1.0)
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/")
+def index():
+    if "user_id" in session:
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("login"))
+
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    """User login"""
-    if request.method == 'POST':
-        data = request.get_json() if request.is_json else request.form
-        email = data.get('email', '').strip()
-        password = data.get('password', '')
-        
-        if not email or not password:
-            return jsonify({'success': False, 'error': 'Email and password are required'}), 400
-        
-        user = UserModel.find_by_email(db, email)
-        if not user or not AuthHelper.verify_password(password, user['password_hash']):
-            return jsonify({'success': False, 'error': 'Invalid email or password'}), 401
-        
-        # Set session
-        session['user_id'] = str(user['_id'])
-        session['username'] = user['username']
-        session['country'] = user.get('country', 'US')
-        session['preferred_currency'] = user.get('preferred_currency', 'USD')
-        session.permanent = True
-        
-        return jsonify({
-            'success': True,
-            'message': 'Login successful',
-            'redirect': url_for('dashboard')
-        }), 200
-    
-    return render_template('login.html')
+    error = None
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        country = request.form.get("country", "Other")
+
+        user = mongo.db.users.find_one({"email": email})
+        if user and check_password_hash(user["password"], password):
+            session["user_id"] = str(user["_id"])
+            session["name"] = user.get("name", "User")
+            session["email"] = user["email"]
+            session["country"] = country
+            currency_info = COUNTRY_CURRENCY_MAP.get(
+                country, COUNTRY_CURRENCY_MAP["Other"]
+            )
+            session["currency_code"] = currency_info["code"]
+            session["currency_symbol"] = currency_info["symbol"]
+            session["currency_name"] = currency_info["name"]
+
+            mongo.db.users.update_one(
+                {"_id": user["_id"]},
+                {
+                    "$set": {
+                        "country": country,
+                        **currency_info,
+                        "last_login": datetime.utcnow(),
+                    }
+                },
+            )
+            mongo.db.login_logs.insert_one(
+                {
+                    "user_id": str(user["_id"]),
+                    "email": email,
+                    "country": country,
+                    "timestamp": datetime.utcnow(),
+                    "ip": request.remote_addr,
+                }
+            )
+            return redirect(url_for("dashboard"))
+        else:
+            error = "Invalid email or password."
+
+    return render_template("login.html", countries=COUNTRIES, error=error)
 
 
-@app.route('/logout')
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    error = None
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        country = request.form.get("country", "Other")
+
+        if mongo.db.users.find_one({"email": email}):
+            error = "Email already registered."
+        elif len(password) < 6:
+            error = "Password must be at least 6 characters."
+        else:
+            currency_info = COUNTRY_CURRENCY_MAP.get(
+                country, COUNTRY_CURRENCY_MAP["Other"]
+            )
+            mongo.db.users.insert_one(
+                {
+                    "name": name,
+                    "email": email,
+                    "password": generate_password_hash(password),
+                    "country": country,
+                    "currency_code": currency_info["code"],
+                    "currency_symbol": currency_info["symbol"],
+                    "currency_name": currency_info["name"],
+                    "created_at": datetime.utcnow(),
+                    "role": "user",
+                }
+            )
+            return redirect(url_for("login"))
+
+    return render_template("register.html", countries=COUNTRIES, error=error)
+
+
+@app.route("/logout")
 def logout():
-    """User logout"""
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
 
-# ===== Dashboard Routes =====
-
-@app.route('/')
-@app.route('/dashboard')
+@app.route("/dashboard")
 @login_required
 def dashboard():
-    """Main dashboard"""
-    user = UserModel.find_by_id(db, session['user_id'])
-    
+    user = mongo.db.users.find_one({"_id": ObjectId(session["user_id"])})
+    country = session.get("country", "Other")
+    currency_info = COUNTRY_CURRENCY_MAP.get(country, COUNTRY_CURRENCY_MAP["Other"])
+
+    try:
+        total_jobs = mongo.db.jobs.count_documents({})
+        active_workers = mongo.db.users.count_documents({"role": "worker"})
+        completed_tasks = mongo.db.tasks.count_documents({"status": "completed"})
+    except Exception:
+        total_jobs = active_workers = completed_tasks = 0
+
+    stats = {
+        "total_jobs": total_jobs,
+        "active_workers": active_workers,
+        "completed_tasks": completed_tasks,
+        "revenue": 48750,
+    }
+
     return render_template(
-        'dashboard.html',
-        username=session.get('username'),
-        country=session.get('country'),
-        currency=session.get('preferred_currency')
+        "dashboard.html",
+        user=user,
+        stats=stats,
+        currency=currency_info,
+        country=country,
+        countries=COUNTRIES,
+        now_hour=datetime.now().hour,
     )
 
 
-# ===== Currency Converter Routes =====
-
-@app.route('/api/convert-currency', methods=['POST'])
-@login_required
-def convert_currency():
-    """Convert currency based on user's country"""
-    data = request.get_json()
-    amount = data.get('amount', 0)
-    from_currency = data.get('from_currency', session.get('preferred_currency', 'USD'))
-    to_currency = data.get('to_currency', 'USD')
-    
-    try:
-        converted_amount, from_curr, to_curr = CurrencyConverter.convert_currency(
-            amount, from_currency, to_currency
-        )
-        
-        return jsonify({
-            'success': True,
-            'original_amount': amount,
-            'original_currency': from_curr,
-            'converted_amount': converted_amount,
-            'target_currency': to_curr
-        }), 200
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-@app.route('/api/exchange-rate', methods=['GET'])
-def get_exchange_rate():
-    """Get exchange rate between two currencies"""
-    from_currency = request.args.get('from', 'USD')
-    to_currency = request.args.get('to', 'USD')
-    
-    try:
-        rate = CurrencyConverter.get_exchange_rate(from_currency, to_currency)
-        return jsonify({
-            'success': True,
-            'from': from_currency,
-            'to': to_currency,
-            'rate': rate
-        }), 200
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-# ===== RAG Chatbot Routes =====
-
-@app.route('/api/chat', methods=['POST'])
-@login_required
-def chat():
-    """Process user query through RAG chatbot"""
-    data = request.get_json()
-    user_query = data.get('query', '').strip()
-    
-    if not user_query:
-        return jsonify({'success': False, 'error': 'Query cannot be empty'}), 400
-    
-    try:
-        # Get conversation history
-        conversations = ConversationModel.get_user_conversations(db, session['user_id'], limit=10)
-        conversation_history = [
-            {'role': 'user' if conv.get('agent_type') != 'assistant' else 'assistant', 'content': conv.get('query') or conv.get('response')}
-            for conv in conversations
-        ]
-        
-        # Process query through RAG system
-        result = rag_system.process_query(
-            user_query,
-            session['user_id'],
-            conversation_history
-        )
-        
-        # Store conversation
-        ConversationModel.create_conversation(
-            db,
-            session['user_id'],
-            result['agent_type'],
-            user_query,
-            result['response']
-        )
-        
-        return jsonify({
-            'success': True,
-            'response': result['response'],
-            'agent_type': result['agent_type'],
-            'faq_used': result['faq_used']
-        }), 200
-    except Exception as e:
-        print(f"[v0] Chat error: {e}")
-        return jsonify({'success': False, 'error': 'Failed to process query'}), 500
-
-
-@app.route('/api/chatbot-page')
-@login_required
-def get_chatbot_page():
-    """Redirect to chatbot page"""
-    return render_template('chatbot.html', username=session.get('username'))
-
-
-@app.route('/chatbot')
+@app.route("/chatbot")
 @login_required
 def chatbot():
-    """Chatbot page"""
-    return render_template('chatbot.html', username=session.get('username'))
+    currency_info = COUNTRY_CURRENCY_MAP.get(
+        session.get("country", "Other"), COUNTRY_CURRENCY_MAP["Other"]
+    )
+    return render_template(
+        "chatbot.html", currency=currency_info, user_name=session.get("name", "User")
+    )
 
 
-# ===== User Profile Routes =====
-
-@app.route('/api/user-profile', methods=['GET'])
+@app.route("/api/currency/convert", methods=["POST"])
 @login_required
-def get_user_profile():
-    """Get user profile"""
-    user = UserModel.find_by_id(db, session['user_id'])
-    if not user:
-        return jsonify({'success': False, 'error': 'User not found'}), 404
-    
-    return jsonify({
-        'success': True,
-        'username': user.get('username'),
-        'email': user.get('email'),
-        'country': user.get('country'),
-        'preferred_currency': user.get('preferred_currency'),
-        'created_at': user.get('created_at').isoformat()
-    }), 200
-
-
-@app.route('/api/user-profile', methods=['PUT'])
-@login_required
-def update_user_profile():
-    """Update user profile"""
+def convert_currency():
     data = request.get_json()
-    
-    update_data = {}
-    if 'preferred_currency' in data:
-        update_data['preferred_currency'] = data['preferred_currency']
-        session['preferred_currency'] = data['preferred_currency']
-    
-    if update_data:
-        UserModel.update_user(db, session['user_id'], update_data)
-    
-    return jsonify({'success': True, 'message': 'Profile updated'}), 200
+    amount = float(data.get("amount", 0))
+    from_cur = data.get("from", "USD")
+    to_cur = data.get("to", "INR")
+    rate = get_exchange_rate(from_cur, to_cur)
+    return jsonify(
+        {
+            "success": True,
+            "amount": amount,
+            "from": from_cur,
+            "to": to_cur,
+            "rate": rate,
+            "converted": round(amount * rate, 2),
+        }
+    )
 
 
-# ===== Error Handlers =====
-
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({'success': False, 'error': 'Page not found'}), 404
-
-
-@app.errorhandler(500)
-def internal_error(error):
-    return jsonify({'success': False, 'error': 'Internal server error'}), 500
-
-
-# ===== Application Context =====
-
-@app.teardown_appcontext
-def close_db(error):
-    """Close database connection on app context teardown"""
-    db_connection.close()
+@app.route("/api/currency/rates", methods=["GET"])
+@login_required
+def get_rates():
+    base = request.args.get("base", session.get("currency_code", "USD"))
+    try:
+        url = f"https://api.exchangerate-api.com/v4/latest/{base}"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            return jsonify(
+                {"success": True, "rates": data.get("rates", {}), "base": base}
+            )
+    except Exception as e:
+        print(f"Rates error: {e}")
+    return jsonify({"success": False, "message": "Could not fetch rates"})
 
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+@app.route("/api/chat", methods=["POST"])
+@login_required
+def chat():
+    data = request.get_json()
+    message = data.get("message", "")
+    history = data.get("history", [])
+
+    try:
+        country = session.get("country", "Unknown")
+        currency = session.get("currency_code", "USD")
+        system_ctx = (
+            f"You are Ajeer AI Assistant, a smart workforce management platform assistant. "
+            f"The user is from {country} using {currency} currency. "
+            f"Help with jobs, workers, payments, workforce management. Be concise and professional."
+        )
+
+        chat_history = []
+        for h in history[-8:]:
+            role = "user" if h["role"] == "user" else "model"
+            chat_history.append({"role": role, "parts": [h["content"]]})
+
+        gemini_chat = gemini_model.start_chat(history=chat_history)
+        response = gemini_chat.send_message(f"{system_ctx}\n\n{message}")
+        reply = response.text
+
+        mongo.db.chat_logs.insert_one(
+            {
+                "user_id": session["user_id"],
+                "message": message,
+                "reply": reply[:500],
+                "timestamp": datetime.utcnow(),
+            }
+        )
+
+        return jsonify({"success": True, "reply": reply})
+    except Exception as e:
+        return jsonify({"success": False, "reply": f"AI error: {str(e)}"})
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)

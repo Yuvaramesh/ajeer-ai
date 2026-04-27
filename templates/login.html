@@ -1,82 +1,398 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Ajeer Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body class="auth-page">
-    <div class="auth-container">
-        <div class="auth-card">
-            <h1 class="auth-title">Login to Ajeer</h1>
-            
-            <form id="loginForm" method="POST">
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        required
-                        placeholder="your@email.com"
-                        class="form-input"
-                    >
-                </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ajeer — Login</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        required
-                        placeholder="Enter your password"
-                        class="form-input"
-                    >
-                </div>
+      :root {
+        --brand: #ff6b35;
+        --brand-dark: #e85a24;
+        --ink: #0d0d0d;
+        --paper: #fafaf8;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --card: #ffffff;
+        --error: #ef4444;
+      }
 
-                <button type="submit" class="btn btn-primary btn-block">Login</button>
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--paper);
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
 
-                <p class="auth-link">
-                    Don&apos;t have an account? <a href="{{ url_for('register') }}">Register here</a>
-                </p>
-            </form>
+      /* Left Panel */
+      .panel-left {
+        background: var(--ink);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 3rem;
+      }
 
-            <div id="error-message" class="alert alert-error" style="display: none;"></div>
+      .panel-left::before {
+        content: "";
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 500px;
+        height: 500px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 107, 53, 0.3) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      .panel-left::after {
+        content: "";
+        position: absolute;
+        bottom: -80px;
+        left: -80px;
+        width: 400px;
+        height: 400px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 107, 53, 0.15) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      .brand {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 2rem;
+        color: #fff;
+        letter-spacing: -0.02em;
+        position: relative;
+        z-index: 1;
+      }
+
+      .brand span {
+        color: var(--brand);
+      }
+
+      .panel-hero {
+        position: relative;
+        z-index: 1;
+      }
+
+      .panel-hero h1 {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 3.5rem;
+        line-height: 1.05;
+        color: #fff;
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.03em;
+      }
+
+      .panel-hero h1 em {
+        font-style: normal;
+        color: var(--brand);
+      }
+
+      .panel-hero p {
+        font-size: 1.05rem;
+        color: rgba(255, 255, 255, 0.55);
+        line-height: 1.7;
+        max-width: 340px;
+      }
+
+      .stats-row {
+        display: flex;
+        gap: 2rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .stat {
+      }
+      .stat-num {
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 2rem;
+        color: #fff;
+      }
+      .stat-label {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      /* Right Panel */
+      .panel-right {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+      }
+
+      .form-box {
+        width: 100%;
+        max-width: 420px;
+      }
+
+      .form-box h2 {
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1.9rem;
+        color: var(--ink);
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+      }
+
+      .form-box p {
+        color: var(--muted);
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+      }
+
+      .form-box p a {
+        color: var(--brand);
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .error-msg {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: var(--error);
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .field {
+        margin-bottom: 1.25rem;
+      }
+
+      label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--ink);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.5rem;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        color: var(--ink);
+        background: var(--card);
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        outline: none;
+        appearance: none;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.12);
+      }
+
+      select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%236B7280'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 2.5rem;
+      }
+
+      .btn-login {
+        width: 100%;
+        padding: 0.95rem;
+        background: var(--brand);
+        color: #fff;
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.1s;
+        margin-top: 0.5rem;
+      }
+
+      .btn-login:hover {
+        background: var(--brand-dark);
+      }
+      .btn-login:active {
+        transform: scale(0.99);
+      }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 1.5rem 0;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      @media (max-width: 768px) {
+        body {
+          grid-template-columns: 1fr;
+        }
+        .panel-left {
+          display: none;
+        }
+        .panel-right {
+          padding: 2rem 1.5rem;
+        }
+      }
+
+      /* Floating label animation */
+      .field-float {
+        position: relative;
+      }
+      .field-float input {
+        padding-top: 1.25rem;
+        padding-bottom: 0.5rem;
+      }
+      .field-float label {
+        position: absolute;
+        top: 50%;
+        left: 1rem;
+        transform: translateY(-50%);
+        transition: all 0.2s;
+        pointer-events: none;
+        font-size: 0.95rem;
+        color: var(--muted);
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 400;
+        margin: 0;
+      }
+      .field-float input:focus ~ label,
+      .field-float input:not(:placeholder-shown) ~ label {
+        top: 0.4rem;
+        font-size: 0.7rem;
+        color: var(--brand);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel-left">
+      <div class="brand">Ajeer<span>.</span></div>
+
+      <div class="panel-hero">
+        <h1>Workforce<br />Built for<br /><em>Everyone.</em></h1>
+        <p>
+          Connect skilled workers with opportunities across borders. Smart,
+          fast, and built for the modern economy.
+        </p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-num">12K+</div>
+          <div class="stat-label">Workers</div>
         </div>
+        <div class="stat">
+          <div class="stat-num">40+</div>
+          <div class="stat-label">Countries</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">98%</div>
+          <div class="stat-label">Success Rate</div>
+        </div>
+      </div>
     </div>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('error-message');
-            
-            try {
-                const response = await fetch('{{ url_for("login") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    window.location.href = data.redirect;
-                } else {
-                    errorDiv.textContent = data.error;
-                    errorDiv.style.display = 'block';
-                }
-            } catch (error) {
-                errorDiv.textContent = 'An error occurred. Please try again.';
-                errorDiv.style.display = 'block';
-            }
-        });
-    </script>
-</body>
+    <div class="panel-right">
+      <div class="form-box">
+        <h2>Welcome back</h2>
+        <p>Don't have an account? <a href="/register">Create one</a></p>
+
+        {% if error %}
+        <div class="error-msg">⚠ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/login">
+          <div class="field">
+            <label>Email Address</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Password</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Your Country</label>
+            <select name="country" required>
+              {% for c in countries %}
+              <option value="{{ c }}">{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <button class="btn-login" type="submit">Sign In to Ajeer →</button>
+        </form>
+
+        <div class="divider">or</div>
+        <p style="text-align: center; color: var(--muted); font-size: 0.85rem">
+          By signing in you agree to our
+          <a href="#" style="color: var(--brand)">Terms</a> &amp;
+          <a href="#" style="color: var(--brand)">Privacy Policy</a>
+        </p>
+      </div>
+    </div>
+  </body>
 </html>
