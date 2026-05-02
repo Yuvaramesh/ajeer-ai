@@ -7,7 +7,7 @@ A full-stack workforce management platform with:
 - 🤖 AI chatbot powered by Gemini 2.5 Flash Lite
 - 🧠 RAG Chatbot page (scaffolded, Qdrant ready)
 - 🗄️ MongoDB for users, jobs, tasks, logs
-
+  
 ---
 
 ## Project Structure
