@@ -10,6 +10,7 @@ A full-stack workforce management platform with:
   
 ---
 
+
 ## Project Structure
 
 ```
