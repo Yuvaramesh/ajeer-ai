@@ -2,6 +2,7 @@
 
 A full-stack workforce management platform with:
 
+
 - 🔐 Login with country selection → auto currency detection
 - 💱 Live currency converter (ExchangeRate-API)
 - 🤖 AI chatbot powered by Gemini 2.5 Flash Lite
