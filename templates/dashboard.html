@@ -9,12 +9,10 @@
       rel="stylesheet"
     />
     <style>
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
+      * {
         margin: 0;
         padding: 0;
+        box-sizing: border-box;
       }
       :root {
         --brand: #ff6b35;
@@ -26,37 +24,26 @@
         --card: #ffffff;
         --sidebar: #0d0d0d;
         --sidebar-w: 260px;
-        --success: #10b981;
-        --info: #3b82f6;
-        --warn: #f59e0b;
       }
       body {
         font-family: "DM Sans", sans-serif;
         background: var(--paper);
-        color: var(--ink);
-        min-height: 100vh;
         display: flex;
       }
-
-      /* ── Sidebar ── */
       .sidebar {
         width: var(--sidebar-w);
         background: var(--sidebar);
         min-height: 100vh;
         position: fixed;
-        top: 0;
-        left: 0;
+        padding: 2rem 1.5rem;
         display: flex;
         flex-direction: column;
-        padding: 2rem 1.5rem;
-        z-index: 100;
       }
       .sidebar-brand {
         font-family: "Syne", sans-serif;
         font-weight: 800;
         font-size: 1.6rem;
         color: #fff;
-        letter-spacing: -0.02em;
         margin-bottom: 2.5rem;
       }
       .sidebar-brand span {
@@ -64,12 +51,9 @@
       }
       .nav-section {
         font-size: 0.7rem;
-        font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
         color: rgba(255, 255, 255, 0.3);
-        margin-bottom: 0.75rem;
-        margin-top: 1.5rem;
+        margin: 1.5rem 0 0.75rem 0;
       }
       .nav-item {
         display: flex;
@@ -78,26 +62,14 @@
         padding: 0.65rem 0.9rem;
         border-radius: 10px;
         color: rgba(255, 255, 255, 0.55);
-        font-size: 0.9rem;
-        font-weight: 400;
         text-decoration: none;
         margin-bottom: 0.25rem;
         transition: all 0.15s;
-        cursor: pointer;
       }
-      .nav-item:hover {
-        background: rgba(255, 255, 255, 0.07);
-        color: #fff;
-      }
+      .nav-item:hover,
       .nav-item.active {
         background: var(--brand);
         color: #fff;
-        font-weight: 500;
-      }
-      .nav-icon {
-        font-size: 1rem;
-        width: 20px;
-        text-align: center;
       }
       .sidebar-footer {
         margin-top: auto;
@@ -119,327 +91,55 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: "Syne", sans-serif;
         font-weight: 700;
         color: #fff;
-        font-size: 0.9rem;
-        flex-shrink: 0;
-      }
-      .user-info {
-        overflow: hidden;
       }
       .user-name {
         font-size: 0.85rem;
         color: #fff;
         font-weight: 500;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }
       .user-country {
         font-size: 0.72rem;
         color: rgba(255, 255, 255, 0.4);
       }
       .btn-logout {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        width: 100%;
+        display: block;
         padding: 0.6rem 0.9rem;
         background: rgba(239, 68, 68, 0.12);
         border: 1px solid rgba(239, 68, 68, 0.25);
         color: #fca5a5;
         border-radius: 8px;
-        font-family: "DM Sans", sans-serif;
-        font-size: 0.85rem;
-        cursor: pointer;
         text-decoration: none;
-        transition: all 0.15s;
+        text-align: center;
       }
-      .btn-logout:hover {
-        background: rgba(239, 68, 68, 0.2);
-      }
-
-      /* ── Main ── */
       .main {
         margin-left: var(--sidebar-w);
         flex: 1;
         padding: 2.5rem;
-        min-height: 100vh;
       }
-
-      /* ── Header ── */
       .dash-header {
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        margin-bottom: 2.5rem;
+        align-items: center;
+        margin-bottom: 2rem;
       }
       .dash-header h1 {
         font-family: "Syne", sans-serif;
-        font-weight: 700;
         font-size: 1.6rem;
-        letter-spacing: -0.02em;
-        color: var(--ink);
-      }
-      .header-right {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
       }
       .currency-pill {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
         background: var(--card);
-        border: 1.5px solid var(--border);
-        padding: 0.45rem 1rem;
+        border: 1px solid var(--border);
+        padding: 0.5rem 1rem;
         border-radius: 30px;
         font-size: 0.85rem;
-        font-weight: 500;
-        color: var(--ink);
       }
-      .currency-flag {
-        font-size: 1.1rem;
-      }
-      .time-pill {
-        background: var(--card);
-        border: 1.5px solid var(--border);
-        padding: 0.45rem 1rem;
-        border-radius: 30px;
-        font-size: 0.8rem;
-        color: var(--muted);
-      }
-
-      /* ── Stats ── */
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.25rem;
-        margin-bottom: 2rem;
-      }
-      .stat-card {
-        background: var(--card);
-        border-radius: 16px;
-        padding: 1.5rem;
-        position: relative;
-        overflow: hidden;
-        border: 1px solid var(--border);
-        transition:
-          transform 0.2s,
-          box-shadow 0.2s;
-      }
-      .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-      }
-      .stat-card.brand {
-        background: var(--brand);
-        border-color: var(--brand);
-      }
-      .stat-card.brand .stat-title,
-      .stat-card.brand .stat-sub {
-        color: rgba(255, 255, 255, 0.75);
-      }
-      .stat-card.brand .stat-value {
-        color: #fff;
-      }
-      .stat-title {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted);
-        margin-bottom: 0.75rem;
-        font-weight: 500;
-      }
-      .stat-value {
-        font-family: "Syne", sans-serif;
-        font-weight: 700;
-        font-size: 2rem;
-        color: var(--ink);
-        letter-spacing: -0.02em;
-        margin-bottom: 0.25rem;
-      }
-      .stat-sub {
-        font-size: 0.8rem;
-        color: var(--muted);
-      }
-      .stat-icon {
-        position: absolute;
-        top: 1.25rem;
-        right: 1.25rem;
-        font-size: 1.5rem;
-        opacity: 0.15;
-      }
-      .stat-card.brand .stat-icon {
-        opacity: 0.3;
-      }
-
-      /* ── Two-column grid ── */
-      .dash-grid {
-        display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
-      }
-
-      /* ── Cards ── */
-      .card {
-        background: var(--card);
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        overflow: hidden;
-      }
-      .card-header {
-        padding: 1.25rem 1.5rem;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .card-title {
-        font-family: "Syne", sans-serif;
-        font-weight: 600;
-        font-size: 0.95rem;
-        color: var(--ink);
-      }
-      .card-badge {
-        font-size: 0.72rem;
-        background: rgba(255, 107, 53, 0.1);
-        color: var(--brand);
-        padding: 0.25rem 0.6rem;
-        border-radius: 20px;
-        font-weight: 500;
-      }
-      .card-body {
-        padding: 1.5rem;
-      }
-
-      /* ── Currency Converter ── */
-      .converter-row {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-      }
-      .converter-input-wrap {
-        flex: 1;
-      }
-      .converter-input-wrap label {
-        display: block;
-        font-size: 0.7rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted);
-        margin-bottom: 0.4rem;
-      }
-      .converter-input {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border: 1.5px solid var(--border);
-        border-radius: 10px;
-        font-family: "DM Sans", sans-serif;
-        font-size: 1rem;
-        font-weight: 500;
-        color: var(--ink);
-        outline: none;
-        transition: border-color 0.2s;
-      }
-      .converter-input:focus {
-        border-color: var(--brand);
-      }
-      .converter-select {
-        padding: 0.75rem 1rem;
-        border: 1.5px solid var(--border);
-        border-radius: 10px;
-        font-family: "DM Sans", sans-serif;
-        font-size: 0.9rem;
-        color: var(--ink);
-        outline: none;
-        background: var(--paper);
-        cursor: pointer;
-        transition: border-color 0.2s;
-        appearance: none;
-        padding-right: 2rem;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%236B7280'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 0.7rem center;
-      }
-      .converter-swap {
-        width: 36px;
-        height: 36px;
-        background: var(--paper);
-        border: 1.5px solid var(--border);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.2s;
-        flex-shrink: 0;
-        margin-top: 1.3rem;
-      }
-      .converter-swap:hover {
-        background: var(--brand);
-        border-color: var(--brand);
-        color: #fff;
-      }
-      .converter-result {
-        background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
-        border-radius: 12px;
-        padding: 1.25rem;
-        color: #fff;
-        text-align: center;
-        margin-top: 1rem;
-      }
-      .result-amount {
-        font-family: "Syne", sans-serif;
-        font-weight: 800;
-        font-size: 2rem;
-        letter-spacing: -0.02em;
-        margin-bottom: 0.25rem;
-      }
-      .result-label {
-        font-size: 0.8rem;
-        opacity: 0.8;
-      }
-      .result-rate {
-        font-size: 0.75rem;
-        opacity: 0.6;
-        margin-top: 0.5rem;
-      }
-      .btn-convert {
-        width: 100%;
-        padding: 0.75rem;
-        background: var(--ink);
-        color: #fff;
-        border: none;
-        border-radius: 10px;
-        font-family: "Syne", sans-serif;
-        font-weight: 600;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: background 0.2s;
-        margin-top: 1rem;
-      }
-      .btn-convert:hover {
-        background: #222;
-      }
-      .loading-text {
-        color: var(--muted);
-        font-size: 0.85rem;
-        text-align: center;
-        padding: 0.5rem;
-      }
-
-      /* ── Feature Cards Row ── */
       .feature-row {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: 1fr 1fr;
         gap: 1.25rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
       }
       .feature-card {
         background: var(--card);
@@ -450,176 +150,167 @@
         color: inherit;
         transition: all 0.2s;
         cursor: pointer;
-        display: block;
-        position: relative;
-        overflow: hidden;
-      }
-      .feature-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--accent, var(--brand));
-        transform: scaleX(0);
-        transform-origin: left;
-        transition: transform 0.3s;
-      }
-      .feature-card:hover::before {
-        transform: scaleX(1);
       }
       .feature-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
       }
-      .feature-card.chatbot {
-        --accent: #8b5cf6;
-      }
-      .feature-card.jobs {
-        --accent: #10b981;
-      }
-      .feature-card.analytics {
-        --accent: #3b82f6;
-      }
       .fc-icon {
         font-size: 2rem;
         margin-bottom: 1rem;
-        width: 52px;
-        height: 52px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0, 0, 0, 0.04);
-      }
-      .feature-card.chatbot .fc-icon {
-        background: rgba(139, 92, 246, 0.1);
-      }
-      .feature-card.jobs .fc-icon {
-        background: rgba(16, 185, 129, 0.1);
-      }
-      .feature-card.analytics .fc-icon {
-        background: rgba(59, 130, 246, 0.1);
       }
       .fc-title {
         font-family: "Syne", sans-serif;
         font-weight: 700;
-        font-size: 1rem;
-        color: var(--ink);
         margin-bottom: 0.4rem;
       }
       .fc-desc {
         font-size: 0.82rem;
         color: var(--muted);
-        line-height: 1.5;
       }
       .fc-tag {
         display: inline-block;
         margin-top: 0.75rem;
         font-size: 0.7rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
         padding: 0.25rem 0.65rem;
         border-radius: 20px;
         background: rgba(139, 92, 246, 0.1);
         color: #8b5cf6;
       }
-      .feature-card.jobs .fc-tag {
-        background: rgba(16, 185, 129, 0.1);
-        color: #10b981;
+      .card {
+        background: var(--card);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
       }
-      .feature-card.analytics .fc-tag {
-        background: rgba(59, 130, 246, 0.1);
-        color: #3b82f6;
-      }
-
-      /* ── Recent Activity ── */
-      .activity-list {
-        list-style: none;
-      }
-      .activity-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        padding: 0.9rem 0;
+      .card-header {
+        padding: 1.25rem 1.5rem;
         border-bottom: 1px solid var(--border);
-      }
-      .activity-item:last-child {
-        border-bottom: none;
-      }
-      .act-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--brand);
-        flex-shrink: 0;
-        margin-top: 5px;
-      }
-      .act-dot.green {
-        background: var(--success);
-      }
-      .act-dot.blue {
-        background: var(--info);
-      }
-      .act-text {
-        font-size: 0.875rem;
-        color: var(--ink);
-      }
-      .act-time {
-        font-size: 0.75rem;
-        color: var(--muted);
-        margin-top: 0.2rem;
-      }
-
-      /* ── Rates ticker ── */
-      .rates-list {
         display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-      .rate-row {
-        display: flex;
-        align-items: center;
         justify-content: space-between;
-        padding: 0.65rem 0.9rem;
-        background: var(--paper);
-        border-radius: 10px;
-        font-size: 0.875rem;
       }
-      .rate-pair {
-        font-weight: 500;
-        color: var(--ink);
-      }
-      .rate-val {
+      .card-title {
         font-family: "Syne", sans-serif;
         font-weight: 600;
       }
-      .rate-change {
-        font-size: 0.75rem;
-        padding: 0.15rem 0.45rem;
-        border-radius: 6px;
+      .card-badge {
+        font-size: 0.72rem;
+        background: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
+        padding: 0.25rem 0.7rem;
+        border-radius: 20px;
       }
-      .rate-change.up {
-        background: rgba(16, 185, 129, 0.1);
-        color: #10b981;
+      .card-body {
+        padding: 1.75rem;
       }
-      .rate-change.dn {
-        background: rgba(239, 68, 68, 0.1);
-        color: #ef4444;
+      .live-rate-box {
+        background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1.75rem;
       }
-
-      @media (max-width: 1100px) {
-        .stats-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-        .dash-grid {
-          grid-template-columns: 1fr;
-        }
-        .feature-row {
-          grid-template-columns: repeat(2, 1fr);
-        }
+      .currency-selector {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+      }
+      .currency-select {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        font-family: "DM Sans", sans-serif;
+        cursor: pointer;
+      }
+      .swap-btn-icon {
+        background: var(--brand);
+        color: white;
+        border: none;
+        width: 40px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.2rem;
+      }
+      .live-rate-value {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 2rem;
+        color: #fff;
+      }
+      .gemini-strip {
+        display: flex;
+        gap: 0.8rem;
+        background: rgba(139, 92, 246, 0.05);
+        border: 1px solid rgba(139, 92, 246, 0.14);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.75rem;
+      }
+      .gemini-label {
+        font-size: 0.66rem;
+        text-transform: uppercase;
+        color: #8b5cf6;
+        font-weight: 700;
+      }
+      .gemini-body {
+        font-size: 0.85rem;
+        line-height: 1.65;
+      }
+      .calc-grid {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 1rem;
+        align-items: end;
+      }
+      .calc-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.5rem;
+      }
+      .calc-field {
+        display: flex;
+        align-items: center;
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        background: var(--paper);
+      }
+      .calc-sym {
+        padding: 0 1rem;
+        font-weight: 700;
+        color: var(--muted);
+        border-right: 1px solid var(--border);
+      }
+      .calc-input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 0.9rem 1rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        outline: none;
+      }
+      .swap-btn {
+        width: 44px;
+        height: 44px;
+        background: var(--paper);
+        border: 1.5px solid var(--border);
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+      }
+      .swap-btn:hover {
+        background: var(--brand);
+        color: #fff;
+        transform: rotate(180deg);
+      }
+      .calc-note {
+        margin-top: 1rem;
+        text-align: center;
+        font-size: 0.875rem;
+        color: var(--muted);
       }
       @media (max-width: 768px) {
         .sidebar {
@@ -627,493 +318,265 @@
         }
         .main {
           margin-left: 0;
-          padding: 1.5rem;
         }
-        .feature-row {
+        .calc-grid {
           grid-template-columns: 1fr;
         }
-        .stats-grid {
-          grid-template-columns: repeat(2, 1fr);
+        .swap-btn {
+          display: none;
         }
       }
     </style>
   </head>
   <body>
-    <!-- ── Sidebar ── -->
     <aside class="sidebar">
       <div class="sidebar-brand">Ajeer<span>.</span></div>
-
       <div class="nav-section">Main</div>
-      <a class="nav-item active" href="/dashboard"
-        ><span class="nav-icon">⊞</span> Dashboard</a
-      >
-      <a class="nav-item" href="/chatbot"
-        ><span class="nav-icon">🤖</span> AI Chatbot</a
-      >
-
-      <div class="nav-section">Workforce</div>
-      <a class="nav-item" href="#"><span class="nav-icon">👷</span> Workers</a>
-      <a class="nav-item" href="#"><span class="nav-icon">💼</span> Jobs</a>
-      <a class="nav-item" href="#"><span class="nav-icon">📋</span> Tasks</a>
-
-      <div class="nav-section">Finance</div>
-      <a class="nav-item" href="#"><span class="nav-icon">💱</span> Payments</a>
-      <a class="nav-item" href="#"
-        ><span class="nav-icon">📊</span> Analytics</a
-      >
-
+      <a class="nav-item active" href="/dashboard">⊞ Dashboard</a>
+      <a class="nav-item" href="/chatbot">🤖 AI Chatbot</a>
       <div class="sidebar-footer">
         <div class="user-chip">
-          <div class="user-avatar">
+          <div class="user-avatar" id="userAvatar">
             {{ user.name[0].upper() if user and user.name else 'U' }}
           </div>
-          <div class="user-info">
-            <div class="user-name">
+          <div>
+            <div class="user-name" id="userName">
               {{ user.name if user and user.name else session.get('name',
               'User') }}
             </div>
-            <div class="user-country">{{ country }}</div>
+            <div class="user-country" id="userCountry">{{ country }}</div>
           </div>
         </div>
         <a class="btn-logout" href="/logout">⬅ Sign Out</a>
       </div>
     </aside>
 
-    <!-- ── Main Content ── -->
     <main class="main">
-      <!-- Header -->
       <div class="dash-header">
-        <div>
-          <h1>
-            Good {{ 'morning' if now_hour < 12 else ('afternoon' if now_hour <
-            17 else 'evening') }}, {{ session.get('name', 'User').split()[0] }}
-            👋
-          </h1>
-        </div>
-        <div class="header-right">
-          <div class="currency-pill">
-            <span class="currency-flag">💱</span>
-            <strong>{{ currency.code }}</strong> — {{ currency.name }}
-          </div>
-          <div class="time-pill" id="clock">--:--</div>
+        <h1>
+          Good {{ 'morning' if now_hour < 12 else ('afternoon' if now_hour < 17
+          else 'evening') }},
+          <span id="userNameDisplay"
+            >{{ user.name.split()[0] if user and user.name else 'User' }}</span
+          >
+          👋
+        </h1>
+        <div class="currency-pill">
+          💱 <span id="currencyCode">{{ currency.code }}</span> —
+          <span id="currencyName">{{ currency.name }}</span>
         </div>
       </div>
 
-      <!-- Stats -->
-      <div class="stats-grid">
-        <div class="stat-card brand">
-          <div class="stat-icon">💼</div>
-          <div class="stat-title">Total Jobs</div>
-          <div class="stat-value">{{ stats.total_jobs or '0' }}</div>
-          <div class="stat-sub">Across all categories</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">👷</div>
-          <div class="stat-title">Active Workers</div>
-          <div class="stat-value">{{ stats.active_workers or '0' }}</div>
-          <div class="stat-sub">Currently active</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">✅</div>
-          <div class="stat-title">Completed Tasks</div>
-          <div class="stat-value">{{ stats.completed_tasks or '142' }}</div>
-          <div class="stat-sub">This month</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">💰</div>
-          <div class="stat-title">Revenue</div>
-          <div class="stat-value"><span id="revenueDisplay">...</span></div>
-          <div class="stat-sub">In your currency</div>
-        </div>
-      </div>
-
-      <!-- Feature Cards -->
       <div class="feature-row">
         <a class="feature-card chatbot" href="/chatbot">
           <div class="fc-icon">🤖</div>
           <div class="fc-title">AI Chatbot</div>
           <div class="fc-desc">
-            RAG-powered assistant trained on your workforce data. Ask anything
-            about jobs, workers, or payments.
-          </div>
-          <span class="fc-tag">Coming Soon</span>
-        </a>
-        <div
-          class="feature-card jobs"
-          onclick="alert('Jobs module — coming soon!')"
-        >
-          <div class="fc-icon">💼</div>
-          <div class="fc-title">Job Matching</div>
-          <div class="fc-desc">
-            AI-powered matching connects the right workers with the right
-            opportunities instantly.
+            RAG-powered assistant trained on your workforce data.
           </div>
           <span class="fc-tag">Active</span>
-        </div>
+        </a>
         <div
           class="feature-card analytics"
-          onclick="alert('Analytics — coming soon!')"
+          onclick="alert('Analytics coming soon!')"
         >
           <div class="fc-icon">📊</div>
           <div class="fc-title">Analytics</div>
-          <div class="fc-desc">
-            Deep insights into workforce performance, payment trends, and
-            regional metrics.
-          </div>
+          <div class="fc-desc">Deep insights into workforce performance.</div>
           <span class="fc-tag">Beta</span>
         </div>
       </div>
 
-      <!-- Two column -->
-      <div class="dash-grid">
-        <!-- Currency Converter -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">💱 Currency Converter</span>
-            <span class="card-badge">Live Rates</span>
-          </div>
-          <div class="card-body">
-            <div class="converter-row">
-              <div class="converter-input-wrap">
-                <label>Amount</label>
-                <input
-                  class="converter-input"
-                  type="number"
-                  id="convAmount"
-                  value="1000"
-                  min="0"
-                  step="any"
-                />
-              </div>
-              <div class="converter-input-wrap">
-                <label>From</label>
-                <select class="converter-select" id="convFrom">
-                  <option value="USD">🇺🇸 USD</option>
-                  <option value="EUR">🇪🇺 EUR</option>
-                  <option value="GBP">🇬🇧 GBP</option>
-                  <option value="INR">🇮🇳 INR</option>
-                  <option value="AED">🇦🇪 AED</option>
-                  <option value="SAR">🇸🇦 SAR</option>
-                  <option value="JPY">🇯🇵 JPY</option>
-                  <option value="CNY">🇨🇳 CNY</option>
-                  <option value="CAD">🇨🇦 CAD</option>
-                  <option value="AUD">🇦🇺 AUD</option>
-                  <option value="BRL">🇧🇷 BRL</option>
-                  <option value="SGD">🇸🇬 SGD</option>
-                  <option value="MYR">🇲🇾 MYR</option>
-                  <option value="PKR">🇵🇰 PKR</option>
-                  <option value="NGN">🇳🇬 NGN</option>
-                  <option value="ZAR">🇿🇦 ZAR</option>
-                  <option value="TRY">🇹🇷 TRY</option>
-                  <option value="KRW">🇰🇷 KRW</option>
-                  <option value="CHF">🇨🇭 CHF</option>
-                </select>
-              </div>
-              <div
-                class="converter-swap"
-                onclick="swapCurrencies()"
-                title="Swap"
-              >
-                ⇄
-              </div>
-              <div class="converter-input-wrap">
-                <label>To</label>
-                <select class="converter-select" id="convTo">
-                  <option value="USD">🇺🇸 USD</option>
-                  <option value="EUR">🇪🇺 EUR</option>
-                  <option value="GBP">🇬🇧 GBP</option>
-                  <option value="INR" selected>🇮🇳 INR</option>
-                  <option value="AED">🇦🇪 AED</option>
-                  <option value="SAR">🇸🇦 SAR</option>
-                  <option value="JPY">🇯🇵 JPY</option>
-                  <option value="CNY">🇨🇳 CNY</option>
-                  <option value="CAD">🇨🇦 CAD</option>
-                  <option value="AUD">🇦🇺 AUD</option>
-                  <option value="BRL">🇧🇷 BRL</option>
-                  <option value="SGD">🇸🇬 SGD</option>
-                  <option value="MYR">🇲🇾 MYR</option>
-                  <option value="PKR">🇵🇰 PKR</option>
-                  <option value="NGN">🇳🇬 NGN</option>
-                  <option value="ZAR">🇿🇦 ZAR</option>
-                  <option value="TRY">🇹🇷 TRY</option>
-                  <option value="KRW">🇰🇷 KRW</option>
-                  <option value="CHF">🇨🇭 CHF</option>
-                </select>
-              </div>
-            </div>
-
-            <button class="btn-convert" onclick="doConvert()">Convert →</button>
-
-            <div class="converter-result" id="convResult" style="display: none">
-              <div class="result-amount" id="resultAmount">—</div>
-              <div class="result-label" id="resultLabel">Result</div>
-              <div class="result-rate" id="resultRate">Rate: —</div>
-            </div>
-
-            <div id="convLoading" class="loading-text" style="display: none">
-              ⟳ Fetching live rates…
-            </div>
-
-            <!-- Quick rate display -->
-            <div style="margin-top: 1.5rem">
-              <div
-                style="
-                  font-size: 0.75rem;
-                  text-transform: uppercase;
-                  letter-spacing: 0.08em;
-                  color: var(--muted);
-                  margin-bottom: 0.75rem;
-                  font-weight: 500;
-                "
-              >
-                Quick Rates vs {{ currency.code }}
-              </div>
-              <div class="rates-list" id="ratesList">
-                <div style="color: var(--muted); font-size: 0.85rem">
-                  Loading rates…
-                </div>
-              </div>
-            </div>
-          </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">💱 Currency Converter</span>
+          <span class="card-badge">✨ Live Rates · Gemini AI</span>
         </div>
-
-        <!-- Right column: Activity + Info -->
-        <div style="display: flex; flex-direction: column; gap: 1.25rem">
-          <!-- Recent Activity -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">📋 Recent Activity</span>
+        <div class="card-body">
+          <div class="live-rate-box">
+            <div class="currency-selector">
+              <select
+                id="fromCurrency"
+                class="currency-select"
+                onchange="updateRate()"
+              >
+                <option value="USD">USD - US Dollar</option>
+                <option value="GBP">GBP - British Pound</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="INR">INR - Indian Rupee</option>
+                <option value="AED">AED - UAE Dirham</option>
+                <option value="SAR">SAR - Saudi Riyal</option>
+                <option value="PKR">PKR - Pakistani Rupee</option>
+              </select>
+              <button class="swap-btn-icon" onclick="swapCurrencies()">
+                ⇄
+              </button>
+              <select
+                id="toCurrency"
+                class="currency-select"
+                onchange="updateRate()"
+              >
+                <option value="USD">USD - US Dollar</option>
+                <option value="GBP">GBP - British Pound</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="INR">INR - Indian Rupee</option>
+                <option value="AED">AED - UAE Dirham</option>
+                <option value="SAR">SAR - Saudi Riyal</option>
+              </select>
             </div>
-            <div class="card-body" style="padding-top: 0">
-              <ul class="activity-list">
-                <li class="activity-item">
-                  <div class="act-dot"></div>
-                  <div>
-                    <div class="act-text">
-                      New worker registered in {{ country }}
-                    </div>
-                    <div class="act-time">2 minutes ago</div>
-                  </div>
-                </li>
-                <li class="activity-item">
-                  <div class="act-dot green"></div>
-                  <div>
-                    <div class="act-text">
-                      Task #4821 completed successfully
-                    </div>
-                    <div class="act-time">15 minutes ago</div>
-                  </div>
-                </li>
-                <li class="activity-item">
-                  <div class="act-dot blue"></div>
-                  <div>
-                    <div class="act-text">
-                      Payment processed — {{ currency.symbol }}2,400
-                    </div>
-                    <div class="act-time">1 hour ago</div>
-                  </div>
-                </li>
-                <li class="activity-item">
-                  <div class="act-dot"></div>
-                  <div>
-                    <div class="act-text">
-                      Job posting published: Construction Lead
-                    </div>
-                    <div class="act-time">3 hours ago</div>
-                  </div>
-                </li>
-                <li class="activity-item">
-                  <div class="act-dot green"></div>
-                  <div>
-                    <div class="act-text">5 new applications received</div>
-                    <div class="act-time">5 hours ago</div>
-                  </div>
-                </li>
-              </ul>
+            <div class="live-rate-value" id="rateDisplay">Loading...</div>
+          </div>
+
+          <div class="gemini-strip">
+            <div class="gemini-icon">✨</div>
+            <div>
+              <div class="gemini-label">Gemini AI Insight</div>
+              <div class="gemini-body" id="geminiInsight">
+                Loading analysis...
+              </div>
             </div>
           </div>
 
-          <!-- AI Quick Chat -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">🤖 Quick AI Chat</span>
-              <a
-                href="/chatbot"
-                class="card-badge"
-                style="text-decoration: none"
-                >Full Chat →</a
-              >
-            </div>
-            <div class="card-body">
-              <div
-                id="quickMessages"
-                style="
-                  min-height: 80px;
-                  max-height: 140px;
-                  overflow-y: auto;
-                  margin-bottom: 0.75rem;
-                  font-size: 0.875rem;
-                  line-height: 1.6;
-                  color: var(--muted);
-                "
-              >
-                Ask anything about workforce management…
-              </div>
-              <div style="display: flex; gap: 0.5rem">
+          <div class="calc-grid">
+            <div>
+              <div class="calc-label" id="fromLabel">Amount</div>
+              <div class="calc-field">
+                <span class="calc-sym" id="fromSym">{{ currency.symbol }}</span>
                 <input
-                  type="text"
-                  id="quickInput"
-                  placeholder="Ask Ajeer AI…"
-                  style="
-                    flex: 1;
-                    padding: 0.65rem 0.9rem;
-                    border: 1.5px solid var(--border);
-                    border-radius: 8px;
-                    font-family: inherit;
-                    font-size: 0.875rem;
-                    outline: none;
-                  "
-                  onkeydown="if (event.key === 'Enter') quickChat();"
+                  class="calc-input"
+                  type="number"
+                  id="amount"
+                  value="1"
+                  oninput="convert()"
                 />
-                <button
-                  onclick="quickChat()"
-                  style="
-                    padding: 0.65rem 1rem;
-                    background: var(--brand);
-                    color: #fff;
-                    border: none;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    font-weight: 600;
-                    font-size: 0.875rem;
-                  "
-                >
-                  →
-                </button>
+              </div>
+            </div>
+            <button class="swap-btn" onclick="swap()">⇄</button>
+            <div>
+              <div class="calc-label" id="toLabel">Converted</div>
+              <div class="calc-field">
+                <span class="calc-sym" id="toSym">$</span>
+                <input class="calc-input" type="text" id="converted" readonly />
               </div>
             </div>
           </div>
+          <div class="calc-note" id="note">—</div>
         </div>
       </div>
     </main>
 
     <script>
-      const USER_CURRENCY = "{{ currency.code }}";
-      const USER_SYMBOL = "{{ currency.symbol }}";
-      const BASE_REVENUE_USD = {{ stats.revenue or 48750 }};
+      let currentRate = 0;
 
-      // Clock
-      function updateClock() {
-        const now = new Date();
-        document.getElementById('clock').textContent = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      // Set default currencies based on user's registered country
+      const userCurrency = "{{ currency.code }}";
+      const userSymbol = "{{ currency.symbol }}";
+
+      // Always set "from" to user's currency; "to" defaults to USD (or AED if user is USD-based)
+      const fromSel = document.getElementById("fromCurrency");
+      const toSel = document.getElementById("toCurrency");
+      const fromSymEl = document.getElementById("fromSym");
+
+      // Add user's currency to dropdowns if not already present
+      function ensureOption(sel, code, label) {
+        if (![...sel.options].some((o) => o.value === code)) {
+          const opt = new Option(label, code);
+          sel.add(opt, 0);
+        }
       }
-      updateClock(); setInterval(updateClock, 1000);
+      const userCurrencyLabel = userCurrency + " - {{ currency.name }}";
+      ensureOption(fromSel, userCurrency, userCurrencyLabel);
+      ensureOption(toSel, userCurrency, userCurrencyLabel);
 
-      // Auto-set converter "To" to user's currency
-      const convTo = document.getElementById('convTo');
-      for (let opt of convTo.options) {
-        if (opt.value === USER_CURRENCY) { opt.selected = true; break; }
-      }
+      fromSel.value = userCurrency;
+      fromSymEl.textContent = userSymbol;
 
-      // Load quick rates
-      async function loadRates() {
+      // "To" defaults to USD unless user's currency is already USD, then AED
+      toSel.value = userCurrency === "USD" ? "AED" : "USD";
+      document.getElementById("toSym").textContent =
+        userCurrency === "USD" ? "د.إ" : "$";
+
+      async function updateRate() {
+        const from = document.getElementById("fromCurrency").value;
+        const to = document.getElementById("toCurrency").value;
+
         try {
-          const res = await fetch(`/api/currency/rates?base=${USER_CURRENCY}`);
+          const res = await fetch(`/api/currency/rates?base=${from}`);
           const data = await res.json();
-          if (!data.success) return;
-          const display = ['USD','EUR','GBP','INR','AED','SAR','JPY','SGD'];
-          const tickers = display.filter(c => c !== USER_CURRENCY).slice(0,5);
-          const list = document.getElementById('ratesList');
-          list.innerHTML = '';
-          const changes = [0.12,-0.08,0.34,-0.21,0.05];
-          tickers.forEach((c, i) => {
-            const rate = data.rates[c] ? (1/data.rates[c]).toFixed(4) : '—';
-            const ch = changes[i];
-            const up = ch >= 0;
-            list.innerHTML += `
-              <div class="rate-row">
-                <span class="rate-pair">${USER_CURRENCY}/${c}</span>
-                <span class="rate-val">${rate}</span>
-                <span class="rate-change ${up?'up':'dn'}">${up?'↑':'↓'} ${Math.abs(ch)}%</span>
-              </div>`;
-          });
-
-          // Update revenue
-          const usdToUser = data.rates[USER_CURRENCY] ? (1/data.rates['USD'] * data.rates[USER_CURRENCY]) : 1;
-          const rev = (BASE_REVENUE_USD * (data.rates[USER_CURRENCY] || 1)).toLocaleString('en', {maximumFractionDigits:0});
-          document.getElementById('revenueDisplay').textContent = USER_SYMBOL + rev;
-
-        } catch(e) {
-          document.getElementById('revenueDisplay').textContent = USER_SYMBOL + BASE_REVENUE_USD.toLocaleString();
+          if (data.success && data.rates[to]) {
+            currentRate = data.rates[to];
+            document.getElementById("rateDisplay").innerHTML =
+              `1 ${from} = ${currentRate.toFixed(4)} ${to}`;
+            convert();
+            getInsight(from, to, currentRate);
+          }
+        } catch (error) {
+          console.error("Rate error:", error);
+          document.getElementById("rateDisplay").innerHTML = "Rate unavailable";
         }
       }
-      loadRates();
 
-      // Convert
-      async function doConvert() {
-        const amount = parseFloat(document.getElementById('convAmount').value) || 0;
-        const from = document.getElementById('convFrom').value;
-        const to = document.getElementById('convTo').value;
-
-        document.getElementById('convLoading').style.display = 'block';
-        document.getElementById('convResult').style.display = 'none';
-
-        const res = await fetch('/api/currency/convert', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({amount, from, to})
-        });
-        const data = await res.json();
-        document.getElementById('convLoading').style.display = 'none';
-
-        if (data.success) {
-          document.getElementById('convResult').style.display = 'block';
-          document.getElementById('resultAmount').textContent = data.converted.toLocaleString('en', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ' + to;
-          document.getElementById('resultLabel').textContent = amount.toLocaleString() + ' ' + from + ' equals';
-          document.getElementById('resultRate').textContent = `1 ${from} = ${data.rate.toFixed(4)} ${to}`;
+      async function getInsight(from, to, rate) {
+        try {
+          const res = await fetch("/api/currency/insight", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from_currency: from,
+              to_currency: to,
+              rate: rate,
+              country: "{{ country }}",
+            }),
+          });
+          const data = await res.json();
+          document.getElementById("geminiInsight").innerHTML =
+            data.insight || "No insight available.";
+        } catch (error) {
+          document.getElementById("geminiInsight").innerHTML =
+            "Unable to load insight.";
         }
+      }
+
+      function convert() {
+        const amount = parseFloat(document.getElementById("amount").value);
+        if (isNaN(amount)) return;
+        const converted = amount * currentRate;
+        document.getElementById("converted").value = converted.toFixed(4);
+        const from = document.getElementById("fromCurrency").value;
+        const to = document.getElementById("toCurrency").value;
+        document.getElementById("note").innerHTML =
+          `${amount} ${from} = ${converted.toFixed(4)} ${to}`;
+      }
+
+      function swap() {
+        const fromSelect = document.getElementById("fromCurrency");
+        const toSelect = document.getElementById("toCurrency");
+        const temp = fromSelect.value;
+        fromSelect.value = toSelect.value;
+        toSelect.value = temp;
+        updateRate();
       }
 
       function swapCurrencies() {
-        const from = document.getElementById('convFrom');
-        const to = document.getElementById('convTo');
-        const tmp = from.value;
-        from.value = to.value;
-        to.value = tmp;
+        swap();
       }
 
-      // Quick Chat
-      let chatHistory = [];
-      async function quickChat() {
-        const input = document.getElementById('quickInput');
-        const msg = input.value.trim();
-        if (!msg) return;
-        input.value = '';
+      // Initialize
+      updateRate();
+      setInterval(() => {
+        updateClock();
+      }, 1000);
 
-        const box = document.getElementById('quickMessages');
-        box.innerHTML += `<div style="margin-bottom:0.5rem;"><strong style="color:var(--ink)">You:</strong> ${msg}</div>`;
-        box.innerHTML += `<div style="margin-bottom:0.5rem;color:var(--muted)">Ajeer AI is thinking…</div>`;
-        box.scrollTop = box.scrollHeight;
-
-        chatHistory.push({role:'user', content: msg});
-
-        const res = await fetch('/api/chat', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({message: msg, history: chatHistory})
-        });
-        const data = await res.json();
-        const reply = data.reply || 'Sorry, I encountered an error.';
-        chatHistory.push({role:'assistant', content: reply});
-
-        // Remove "thinking" message
-        const divs = box.querySelectorAll('div');
-        if (divs.length) divs[divs.length-1].remove();
-        box.innerHTML += `<div style="margin-bottom:0.5rem;"><strong style="color:var(--brand)">Ajeer AI:</strong> ${reply}</div>`;
-        box.scrollTop = box.scrollHeight;
+      function updateClock() {
+        const clock = document.getElementById("clock");
+        if (clock) {
+          clock.textContent = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
       }
     </script>
-
-    {% set now_hour = now_hour|default(12) %}
+    <div id="clock" style="display: none"></div>
   </body>
 </html>

@@ -7,15 +7,31 @@ from pymongo import MongoClient, ASCENDING
 from werkzeug.security import generate_password_hash
 from datetime import datetime
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/ajeer_db")
 
+print(f"Connecting to: {MONGO_URI[:50]}...")  # Show first 50 chars (hides password)
+
 client = MongoClient(MONGO_URI)
-db = client.get_database()
+# Explicitly specify the database name
+db = client["ajeer_db"]  # <-- FIXED: Use ajeer_db explicitly
 
 
 def init():
     print("Initializing Ajeer MongoDB...")
+
+    # Test connection
+    try:
+        client.admin.command("ping")
+        print("✓ Connected to MongoDB successfully")
+        print(f"✓ Using database: {db.name}")
+    except Exception as e:
+        print(f"✗ Failed to connect: {e}")
+        return
 
     # Indexes
     db.users.create_index([("email", ASCENDING)], unique=True)
@@ -23,6 +39,9 @@ def init():
     db.tasks.create_index([("status", ASCENDING)])
     db.chat_logs.create_index([("user_id", ASCENDING), ("timestamp", ASCENDING)])
     db.login_logs.create_index([("user_id", ASCENDING)])
+    db.currency_insights.create_index(
+        [("user_id", ASCENDING), ("timestamp", ASCENDING)]
+    )
     print("✓ Indexes created")
 
     # Seed admin user
@@ -110,6 +129,11 @@ def init():
         ]
         db.tasks.insert_many(tasks)
         print(f"✓ Seeded {len(tasks)} sample tasks")
+
+    # Create currency_insights collection (ensures it exists)
+    if "currency_insights" not in db.list_collection_names():
+        db.create_collection("currency_insights")
+        print("✓ Created currency_insights collection")
 
     print("\n✅ Database initialization complete!")
     print(f"   DB: {db.name}")

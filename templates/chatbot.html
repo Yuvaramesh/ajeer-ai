@@ -453,6 +453,56 @@
         background: rgba(139, 92, 246, 0.05);
       }
 
+      /* Formatted message content */
+      .msg-bubble ul {
+        margin: 0.5rem 0 0.25rem 1.1rem;
+        padding: 0;
+      }
+      .msg-bubble ul li {
+        margin-bottom: 0.35rem;
+        line-height: 1.6;
+      }
+      .msg-bubble p {
+        margin-bottom: 0.5rem;
+      }
+      .msg-bubble p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* Agent badge */
+      .agent-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.68rem;
+        padding: 0.18rem 0.6rem;
+        border-radius: 20px;
+        margin-top: 0.45rem;
+        font-weight: 500;
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--purple);
+      }
+      .agent-tag.transfer {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+      }
+      .agent-tag.compliance {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+      }
+      .agent-tag.rewards {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+      }
+      .agent-tag.support {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+      }
+      .agent-tag.faq {
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--purple);
+      }
+
       @media (max-width: 768px) {
         .sidebar {
           display: none;
@@ -469,13 +519,7 @@
       <div class="nav-section">Main</div>
       <a class="nav-item" href="/dashboard"><span>⊞</span> Dashboard</a>
       <a class="nav-item active" href="/chatbot"><span>🤖</span> AI Chatbot</a>
-      <div class="nav-section">Workforce</div>
-      <a class="nav-item" href="#"><span>👷</span> Workers</a>
-      <a class="nav-item" href="#"><span>💼</span> Jobs</a>
-      <a class="nav-item" href="#"><span>📋</span> Tasks</a>
-      <div class="nav-section">Finance</div>
-      <a class="nav-item" href="#"><span>💱</span> Payments</a>
-      <a class="nav-item" href="#"><span>📊</span> Analytics</a>
+
       <div class="sidebar-footer">
         <div class="user-chip">
           <div class="user-avatar">
@@ -501,45 +545,48 @@
             <div class="ai-name">Ajeer AI Assistant</div>
             <div class="ai-status">
               <div class="status-dot"></div>
-              Powered by Gemini 2.5 Flash Lite
+              Multi-Agent System · LangGraph
             </div>
           </div>
         </div>
-        <div class="coming-soon-badge">🔬 RAG Mode — Coming Soon</div>
+        <div class="coming-soon-badge" id="agentBadge">
+          🤖 Multi-Agent · Online
+        </div>
       </div>
 
       <!-- Chat Area -->
       <div class="chat-area" id="chatArea">
-        <!-- RAG Info Banner -->
+        <!-- Multi-Agent Banner -->
         <div class="rag-banner">
-          <div class="rag-icon">🧠</div>
-          <h2>RAG-Powered Chatbot</h2>
+          <div class="rag-icon">🕸️</div>
+          <h2>Ajeer AI — Multi-Agent Assistant</h2>
           <p>
-            This chatbot will connect to your Qdrant vector database to provide
-            intelligent, context-aware answers based on your workforce data, job
-            postings, and company knowledge base.
+            Your question is automatically routed to the right specialist agent.
+            Ask anything about sending money, fees, rewards, compliance, or your
+            account.
           </p>
           <div class="rag-features">
-            <div class="rag-feat">📚 Document Search</div>
-            <div class="rag-feat">🔍 Semantic Retrieval</div>
-            <div class="rag-feat">💡 Contextual Answers</div>
-            <div class="rag-feat">🗄️ Qdrant Vector DB</div>
+            <div class="rag-feat">📋 FAQ Agent</div>
+            <div class="rag-feat">💸 Transfer Agent</div>
+            <div class="rag-feat">🛡️ Compliance Agent</div>
+            <div class="rag-feat">🎁 Rewards Agent</div>
+            <div class="rag-feat">🎧 Support Agent</div>
           </div>
         </div>
 
         <!-- Suggestions -->
         <div class="suggestions">
           <button class="suggestion-btn" onclick="sendSuggestion(this)">
-            💼 How many jobs are active?
+            💸 How do I send money?
           </button>
           <button class="suggestion-btn" onclick="sendSuggestion(this)">
-            👷 Find skilled electricians
+            🎁 How does the rewards program work?
           </button>
           <button class="suggestion-btn" onclick="sendSuggestion(this)">
-            💱 Convert {{ currency.symbol }}500 to USD
+            🛡️ Why do I need to verify my identity?
           </button>
           <button class="suggestion-btn" onclick="sendSuggestion(this)">
-            📊 Show workforce summary
+            🎧 How do I contact support?
           </button>
         </div>
 
@@ -548,12 +595,14 @@
           <div class="msg-avatar">🤖</div>
           <div>
             <div class="msg-bubble">
-              Hello {{ user_name }}! I'm Ajeer AI, your workforce management
-              assistant. I'm currently running in standard mode — the full RAG
-              (Retrieval-Augmented Generation) mode with Qdrant vector database
-              integration is coming soon! For now, I can help you with general
-              questions about workforce management, job posting advice, and
-              more. What can I help you with?
+              Hello {{ user_name }}! I'm the Ajeer AI assistant, here to help
+              with anything about the Ajeer money transfer platform. Ask me
+              about <strong>sending money</strong>,
+              <strong>transfer fees</strong>,
+              <strong>rewards &amp; prizes</strong>,
+              <strong>KYC &amp; compliance</strong>, or
+              <strong>account support</strong> — I'll route your question to the
+              right specialist automatically. How can I help you today?
             </div>
             <div class="msg-time">Just now</div>
           </div>
@@ -581,7 +630,8 @@
           <button class="btn-send" onclick="sendMsg()">↑</button>
         </div>
         <div class="input-hint">
-          Press Enter to send · Shift+Enter for new line · RAG mode coming soon
+          Press Enter to send · Shift+Enter for new line · Powered by LangGraph
+          Multi-Agent
         </div>
       </div>
     </main>
@@ -637,10 +687,35 @@
 
       function sendSuggestion(btn) {
         const input = document.getElementById("chatInput");
-        input.value = btn.textContent
-          .replace(/^[\u{1F000}-\u{FFFF}]\s*/u, "")
-          .trim();
+        // Strip leading emoji characters and whitespace
+        input.value = btn.textContent.replace(/^[\p{Emoji}\s]+/u, "").trim();
         sendMsg();
+      }
+
+      function formatMarkdown(text) {
+        const lines = text.split("\n");
+        let html = "";
+        let inList = false;
+        for (let i = 0; i < lines.length; i++) {
+          let line = lines[i];
+          line = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+          if (/^\s*[\*\-]\s+/.test(line)) {
+            const content = line.replace(/^\s*[\*\-]\s+/, "");
+            if (!inList) {
+              html += "<ul>";
+              inList = true;
+            }
+            html += "<li>" + content + "</li>";
+          } else {
+            if (inList) {
+              html += "</ul>";
+              inList = false;
+            }
+            if (line.trim() !== "") html += "<p>" + line + "</p>";
+          }
+        }
+        if (inList) html += "</ul>";
+        return html;
       }
 
       async function sendMsg() {
@@ -662,9 +737,10 @@
           });
           const data = await res.json();
           removeTyping();
+
           const reply =
             data.reply || "I encountered an error. Please try again.";
-          appendMsg(reply.replace(/\n/g, "<br/>"), "ai");
+          appendMsg(formatMarkdown(reply), "ai");
           history.push({ role: "assistant", content: reply });
         } catch (e) {
           removeTyping();
