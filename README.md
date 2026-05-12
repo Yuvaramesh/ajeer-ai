@@ -8,8 +8,6 @@ A full-stack workforce management platform with:
 - 🧠 RAG Chatbot page (scaffolded, Qdrant ready)
 - 🗄️ MongoDB for users, jobs, tasks, logs
 
----
-
 ## Project Structure
 
 ```
