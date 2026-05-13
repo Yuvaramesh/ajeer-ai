@@ -25,7 +25,6 @@ ajeer/
     ├── dashboard.html
     └── chatbot.html
 ```
-
 ---
 
 
