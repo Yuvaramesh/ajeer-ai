@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ajeer — Behaviour Analysis</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --brand: #ff6b35;
+        --brand-dark: #e85a24;
+        --brand-light: rgba(255, 107, 53, 0.1);
+        --ink: #0d0d0d;
+        --paper: #f4f3ef;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --card: #ffffff;
+        --sidebar: #0d0d0d;
+        --sidebar-w: 260px;
+        --green: #10b981;
+        --blue: #3b82f6;
+        --purple: #8b5cf6;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--paper);
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* ── Sidebar (matches dashboard.html) ── */
+      .sidebar {
+        width: var(--sidebar-w);
+        background: var(--sidebar);
+        min-height: 100vh;
+        position: fixed;
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        z-index: 100;
+      }
+      .sidebar-brand {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 1.6rem;
+        color: #fff;
+        margin-bottom: 2.5rem;
+        text-decoration: none;
+        display: block;
+      }
+      .sidebar-brand span {
+        color: var(--brand);
+      }
+      .nav-section {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.3);
+        margin: 1.5rem 0 0.75rem;
+        letter-spacing: 0.08em;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.65rem 0.85rem;
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.6);
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+      .nav-item:hover {
+        background: rgba(255, 255, 255, 0.07);
+        color: #fff;
+      }
+      .nav-item.active {
+        background: var(--brand);
+        color: #fff;
+        font-weight: 500;
+      }
+      .nav-icon {
+        font-size: 1rem;
+        width: 20px;
+        text-align: center;
+      }
+      .sidebar-footer {
+        margin-top: auto;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 1.25rem;
+      }
+
+      /* ── Main ── */
+      .main {
+        margin-left: var(--sidebar-w);
+        flex: 1;
+        padding: 2rem 2.5rem;
+        max-width: calc(100vw - var(--sidebar-w));
+      }
+
+      /* ── Header ── */
+      .page-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .page-header h1 {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 1.9rem;
+        color: var(--ink);
+        letter-spacing: -0.02em;
+      }
+      .page-header p {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-top: 0.2rem;
+      }
+      .period-tabs {
+        display: flex;
+        gap: 0.4rem;
+        background: var(--card);
+        padding: 4px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+      }
+      .period-tab {
+        padding: 0.4rem 0.9rem;
+        border-radius: 7px;
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .period-tab.active {
+        background: var(--brand);
+        color: #fff;
+        font-weight: 500;
+      }
+
+      /* ── AI Insight Banner ── */
+      .ai-banner {
+        background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 100%);
+        border-radius: 16px;
+        padding: 1.75rem 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .ai-banner::before {
+        content: "";
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 107, 53, 0.3) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+      .ai-banner-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(255, 107, 53, 0.2);
+        color: var(--brand);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 0.3rem 0.75rem;
+        border-radius: 20px;
+        margin-bottom: 1rem;
+      }
+      .ai-banner-text {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.95rem;
+        line-height: 1.75;
+        white-space: pre-line;
+        position: relative;
+        z-index: 1;
+      }
+      .ai-banner-text.loading {
+        color: rgba(255, 255, 255, 0.35);
+        font-style: italic;
+      }
+
+      /* ── KPI Cards ── */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+      }
+      .kpi-card {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        border: 1px solid var(--border);
+      }
+      .kpi-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--muted);
+        margin-bottom: 0.6rem;
+      }
+      .kpi-value {
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1.8rem;
+        color: var(--ink);
+        letter-spacing: -0.02em;
+      }
+      .kpi-sub {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-top: 0.25rem;
+      }
+      .kpi-icon {
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+      }
+
+      /* ── Chart Grid ── */
+      .chart-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .chart-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .chart-card {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 1.5rem;
+        border: 1px solid var(--border);
+      }
+      .chart-card.wide {
+        grid-column: span 2;
+      }
+      .chart-title {
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--ink);
+        margin-bottom: 0.25rem;
+      }
+      .chart-subtitle {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-bottom: 1.25rem;
+      }
+      .chart-wrap {
+        position: relative;
+        height: 220px;
+      }
+      .chart-wrap.tall {
+        height: 280px;
+      }
+
+      /* ── Country Table ── */
+      .country-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .country-table th {
+        text-align: left;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--muted);
+        padding: 0 0 0.75rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .country-table td {
+        padding: 0.7rem 0;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.9rem;
+        color: var(--ink);
+        vertical-align: middle;
+      }
+      .country-table tr:last-child td {
+        border-bottom: none;
+      }
+      .country-flag {
+        font-size: 1.2rem;
+        margin-right: 0.5rem;
+      }
+      .bar-bg {
+        background: #f3f4f6;
+        border-radius: 4px;
+        height: 6px;
+        overflow: hidden;
+        margin-top: 4px;
+      }
+      .bar-fill {
+        height: 100%;
+        background: var(--brand);
+        border-radius: 4px;
+        transition: width 0.6s ease;
+      }
+      .amount-chip {
+        background: var(--brand-light);
+        color: var(--brand);
+        font-size: 0.78rem;
+        font-weight: 500;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+      }
+
+      /* ── Platform Context ── */
+      .platform-section {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 1.5rem;
+        border: 1px solid var(--border);
+        margin-bottom: 1.5rem;
+      }
+      .platform-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .platform-badge {
+        font-size: 0.7rem;
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--blue);
+        padding: 0.25rem 0.65rem;
+        border-radius: 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      /* ── Empty state ── */
+      .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--muted);
+      }
+      .empty-state .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+      .empty-state h3 {
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 0.5rem;
+      }
+
+      /* ── Skeleton loading ── */
+      @keyframes shimmer {
+        0% {
+          background-position: -400px 0;
+        }
+        100% {
+          background-position: 400px 0;
+        }
+      }
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          #f0f0f0 25%,
+          #e0e0e0 50%,
+          #f0f0f0 75%
+        );
+        background-size: 400px 100%;
+        animation: shimmer 1.4s infinite;
+        border-radius: 8px;
+      }
+
+      @media (max-width: 900px) {
+        .sidebar {
+          display: none;
+        }
+        .main {
+          margin-left: 0;
+          padding: 1.5rem;
+          max-width: 100%;
+        }
+        .chart-grid {
+          grid-template-columns: 1fr;
+        }
+        .chart-grid-3 {
+          grid-template-columns: 1fr;
+        }
+        .chart-card.wide {
+          grid-column: span 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <a class="sidebar-brand" href="/dashboard">Ajeer<span>.</span></a>
+
+      <div class="nav-section">Main</div>
+      <a class="nav-item" href="/dashboard"
+        ><span class="nav-icon">📊</span> Dashboard</a
+      >
+      <a class="nav-item" href="/chatbot"
+        ><span class="nav-icon">💬</span> AI Chatbot</a
+      >
+
+      <div class="nav-section">Analytics</div>
+      <a class="nav-item active" href="/behaviour"
+        ><span class="nav-icon">🧠</span> Behaviour Analysis</a
+      >
+
+      <div class="nav-section">Account</div>
+      <a class="nav-item" href="/logout"
+        ><span class="nav-icon">🚪</span> Logout</a
+      >
+
+      <div class="sidebar-footer">
+        <div style="color: rgba(255, 255, 255, 0.3); font-size: 0.75rem">
+          Signed in as<br />
+          <span style="color: rgba(255, 255, 255, 0.7)">{{ user_name }}</span>
+          <span style="color: var(--brand)"> · {{ user_country }}</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <!-- Header -->
+      <div class="page-header">
+        <div>
+          <h1>🧠 Behaviour Analysis</h1>
+          <p>AI-powered insights on your remittance patterns</p>
+        </div>
+        <div class="period-tabs">
+          <button class="period-tab active" onclick="setPeriod(30, this)">
+            30d
+          </button>
+          <button class="period-tab" onclick="setPeriod(60, this)">60d</button>
+          <button class="period-tab" onclick="setPeriod(90, this)">90d</button>
+        </div>
+      </div>
+
+      <!-- AI Insight Banner -->
+      <div class="ai-banner">
+        <div class="ai-banner-label">✨ AI Insight</div>
+        <div class="ai-banner-text loading" id="aiInsight">
+          Analysing your remittance patterns…
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon">💸</div>
+          <div class="kpi-label">Total Sent (USD)</div>
+          <div class="kpi-value" id="kpiTotal">—</div>
+          <div class="kpi-sub" id="kpiPeriod">last 30 days</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🔄</div>
+          <div class="kpi-label">Transactions</div>
+          <div class="kpi-value" id="kpiCount">—</div>
+          <div class="kpi-sub">total transfers</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">📍</div>
+          <div class="kpi-label">Top Destination</div>
+          <div class="kpi-value" id="kpiTopCountry" style="font-size: 1.1rem">
+            —
+          </div>
+          <div class="kpi-sub">most money sent here</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">📊</div>
+          <div class="kpi-label">Avg Transaction</div>
+          <div class="kpi-value" id="kpiAvg">—</div>
+          <div class="kpi-sub">USD per transfer</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">⏰</div>
+          <div class="kpi-label">Peak Sending Hour</div>
+          <div class="kpi-value" id="kpiPeakHour">—</div>
+          <div class="kpi-sub" id="kpiPeakDay">most active day: —</div>
+        </div>
+      </div>
+
+      <!-- Charts Row 1 -->
+      <div class="chart-grid">
+        <!-- Country Bar Chart -->
+        <div class="chart-card">
+          <div class="chart-title">Money by Destination Country</div>
+          <div class="chart-subtitle">Total USD sent per country</div>
+          <div class="chart-wrap tall">
+            <canvas id="countryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Hour Heatmap -->
+        <div class="chart-card">
+          <div class="chart-title">When You Send Money</div>
+          <div class="chart-subtitle">
+            Transaction count by hour of day (UTC)
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="hourChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row 2 -->
+      <div class="chart-grid">
+        <!-- Weekday pattern -->
+        <div class="chart-card">
+          <div class="chart-title">Day of Week Pattern</div>
+          <div class="chart-subtitle">Transactions per weekday</div>
+          <div class="chart-wrap">
+            <canvas id="weekdayChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Currency Pairs -->
+        <div class="chart-card">
+          <div class="chart-title">Currency Pairs Used</div>
+          <div class="chart-subtitle">Volume by pair (USD equivalent)</div>
+          <div class="chart-wrap">
+            <canvas id="pairsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Country breakdown table -->
+      <div class="chart-card" style="margin-bottom: 1.5rem">
+        <div class="chart-title">Destination Breakdown</div>
+        <div class="chart-subtitle" style="margin-bottom: 1.25rem">
+          Detailed view per country
+        </div>
+        <div id="countryTableWrap">
+          <div class="empty-state">
+            <div class="empty-icon">🗺️</div>
+            <h3>No data yet</h3>
+            <p>
+              Send money using the currency converter to start tracking your
+              patterns.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform Context -->
+      <div class="platform-section">
+        <div class="platform-header">
+          <div class="chart-title">Platform Trends</div>
+          <span class="platform-badge">Market Context</span>
+        </div>
+        <div class="chart-subtitle">
+          Top destination countries across all Ajeer users (last 30 days)
+        </div>
+        <div id="platformWrap">
+          <div style="color: var(--muted); font-size: 0.9rem">
+            Loading platform data…
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // ── State ──────────────────────────────────────────────────────────────
+      let currentPeriod = 30;
+      let charts = {};
+
+      const COUNTRY_FLAGS = {
+        India: "🇮🇳",
+        "United States": "🇺🇸",
+        UAE: "🇦🇪",
+        "Saudi Arabia": "🇸🇦",
+        "United Kingdom": "🇬🇧",
+        Philippines: "🇵🇭",
+        Pakistan: "🇵🇰",
+        Bangladesh: "🇧🇩",
+        Indonesia: "🇮🇩",
+        Germany: "🇩🇪",
+        France: "🇫🇷",
+        China: "🇨🇳",
+        Japan: "🇯🇵",
+        Australia: "🇦🇺",
+        Canada: "🇨🇦",
+        Brazil: "🇧🇷",
+        Nigeria: "🇳🇬",
+        Egypt: "🇪🇬",
+        Turkey: "🇹🇷",
+        Malaysia: "🇲🇾",
+        Singapore: "🇸🇬",
+        Thailand: "🇹🇭",
+        Mexico: "🇲🇽",
+        "South Korea": "🇰🇷",
+      };
+
+      const CHART_COLORS = [
+        "#ff6b35",
+        "#f59e0b",
+        "#10b981",
+        "#3b82f6",
+        "#8b5cf6",
+        "#ec4899",
+        "#14b8a6",
+        "#f97316",
+        "#6366f1",
+        "#84cc16",
+      ];
+
+      // ── Chart.js defaults ─────────────────────────────────────────────────
+      Chart.defaults.font.family = "'DM Sans', sans-serif";
+      Chart.defaults.color = "#6b7280";
+
+      // ── Period selector ───────────────────────────────────────────────────
+      function setPeriod(days, btn) {
+        currentPeriod = days;
+        document
+          .querySelectorAll(".period-tab")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("kpiPeriod").textContent = `last ${days} days`;
+        loadAll();
+      }
+
+      // ── Destroy & recreate a chart ─────────────────────────────────────────
+      function makeChart(id, config) {
+        if (charts[id]) charts[id].destroy();
+        const ctx = document.getElementById(id).getContext("2d");
+        charts[id] = new Chart(ctx, config);
+      }
+
+      // ── Format helpers ────────────────────────────────────────────────────
+      function fmtUSD(v) {
+        if (v >= 1000) return `$${(v / 1000).toFixed(1)}k`;
+        return `$${v.toFixed(0)}`;
+      }
+
+      function flag(country) {
+        return COUNTRY_FLAGS[country] || "🌍";
+      }
+
+      // ── Load user stats ───────────────────────────────────────────────────
+      async function loadUserStats() {
+        document.getElementById("aiInsight").className =
+          "ai-banner-text loading";
+        document.getElementById("aiInsight").textContent =
+          "Analysing your remittance patterns…";
+
+        try {
+          const res = await fetch(`/api/behaviour/stats?days=${currentPeriod}`);
+          const data = await res.json();
+
+          if (!data.success) throw new Error(data.message || "Failed");
+
+          const stats = data.stats;
+
+          // AI insight
+          const el = document.getElementById("aiInsight");
+          el.className = "ai-banner-text";
+          el.textContent = data.ai_insight || "No insights available yet.";
+
+          if (!stats || !stats.total_transactions) {
+            // Empty state
+            document.getElementById("kpiTotal").textContent = "$0";
+            document.getElementById("kpiCount").textContent = "0";
+            document.getElementById("kpiTopCountry").textContent = "None yet";
+            document.getElementById("kpiAvg").textContent = "$0";
+            document.getElementById("kpiPeakHour").textContent = "—";
+            document.getElementById("kpiPeakDay").textContent =
+              "most active day: —";
+            return;
+          }
+
+          // KPIs
+          document.getElementById("kpiTotal").textContent = fmtUSD(
+            stats.total_usd,
+          );
+          document.getElementById("kpiCount").textContent =
+            stats.total_transactions;
+          document.getElementById("kpiTopCountry").textContent = (
+            flag(stats.top_country) +
+            " " +
+            (stats.top_country || "—")
+          ).trim();
+          document.getElementById("kpiAvg").textContent = fmtUSD(
+            stats.avg_transaction,
+          );
+          document.getElementById("kpiPeakHour").textContent =
+            stats.peak_hour !== null ? `${stats.peak_hour}:00` : "—";
+          document.getElementById("kpiPeakDay").textContent =
+            `most active day: ${stats.peak_weekday || "—"}`;
+
+          // Country bar chart
+          const ctryLabels = Object.keys(stats.country_totals).slice(0, 8);
+          const ctryValues = ctryLabels.map((k) => stats.country_totals[k]);
+          makeChart("countryChart", {
+            type: "bar",
+            data: {
+              labels: ctryLabels.map((c) => flag(c) + " " + c),
+              datasets: [
+                {
+                  label: "USD Sent",
+                  data: ctryValues,
+                  backgroundColor: CHART_COLORS.slice(0, ctryLabels.length),
+                  borderRadius: 6,
+                  borderSkipped: false,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: {
+                  grid: { color: "#f3f4f6" },
+                  ticks: { callback: (v) => fmtUSD(v) },
+                },
+                x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+              },
+            },
+          });
+
+          // Hour line chart
+          const hourLabels = Array.from({ length: 24 }, (_, i) => `${i}h`);
+          const hourValues = hourLabels.map(
+            (_, i) => stats.hour_counts[i] || 0,
+          );
+          makeChart("hourChart", {
+            type: "line",
+            data: {
+              labels: hourLabels,
+              datasets: [
+                {
+                  label: "Transactions",
+                  data: hourValues,
+                  borderColor: "#ff6b35",
+                  backgroundColor: "rgba(255,107,53,0.08)",
+                  fill: true,
+                  tension: 0.4,
+                  pointRadius: 3,
+                  pointBackgroundColor: "#ff6b35",
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: { grid: { color: "#f3f4f6" }, beginAtZero: true },
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+              },
+            },
+          });
+
+          // Weekday bar
+          const DAYS = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+          ];
+          makeChart("weekdayChart", {
+            type: "bar",
+            data: {
+              labels: DAYS.map((d) => d.slice(0, 3)),
+              datasets: [
+                {
+                  label: "Transactions",
+                  data: DAYS.map((d) => stats.weekday_counts[d] || 0),
+                  backgroundColor: DAYS.map((d) =>
+                    d === stats.peak_weekday
+                      ? "#ff6b35"
+                      : "rgba(255,107,53,0.25)",
+                  ),
+                  borderRadius: 6,
+                  borderSkipped: false,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: { grid: { color: "#f3f4f6" }, beginAtZero: true },
+                x: { grid: { display: false } },
+              },
+            },
+          });
+
+          // Currency pairs doughnut
+          const pairLabels = Object.keys(stats.currency_pairs).slice(0, 6);
+          const pairValues = pairLabels.map((k) => stats.currency_pairs[k]);
+          makeChart("pairsChart", {
+            type: "doughnut",
+            data: {
+              labels: pairLabels,
+              datasets: [
+                {
+                  data: pairValues,
+                  backgroundColor: CHART_COLORS.slice(0, pairLabels.length),
+                  borderWidth: 2,
+                  borderColor: "#fff",
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "right",
+                  labels: { font: { size: 11 }, boxWidth: 12 },
+                },
+              },
+              cutout: "60%",
+            },
+          });
+
+          // Country table
+          renderCountryTable(stats.country_totals, stats.country_counts);
+        } catch (err) {
+          console.error("Stats error:", err);
+          document.getElementById("aiInsight").textContent =
+            "Could not load insights. Make sure you have remittance activity logged.";
+        }
+      }
+
+      // ── Country table renderer ─────────────────────────────────────────────
+      function renderCountryTable(totals, counts) {
+        const wrap = document.getElementById("countryTableWrap");
+        const entries = Object.entries(totals);
+        if (!entries.length) {
+          wrap.innerHTML = `<div class="empty-state">
+            <div class="empty-icon">🗺️</div>
+            <h3>No data yet</h3>
+            <p>Send money using the currency converter to start tracking your patterns.</p>
+          </div>`;
+          return;
+        }
+
+        const maxVal = Math.max(...entries.map((e) => e[1]));
+        const rows = entries
+          .slice(0, 10)
+          .map(([country, usd]) => {
+            const pct = Math.round((usd / maxVal) * 100);
+            const txn = counts[country] || 0;
+            return `<tr>
+            <td><span class="country-flag">${flag(country)}</span>${country}</td>
+            <td>
+              <span class="amount-chip">${fmtUSD(usd)}</span>
+              <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
+            </td>
+            <td style="color:var(--muted);text-align:right;">${txn} txn${txn !== 1 ? "s" : ""}</td>
+          </tr>`;
+          })
+          .join("");
+
+        wrap.innerHTML = `<table class="country-table">
+          <thead><tr>
+            <th>Country</th>
+            <th>Total Sent</th>
+            <th style="text-align:right">Transactions</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      }
+
+      // ── Load platform stats ────────────────────────────────────────────────
+      async function loadPlatformStats() {
+        try {
+          const res = await fetch("/api/behaviour/platform?days=30");
+          const data = await res.json();
+          if (!data.success) return;
+
+          const wrap = document.getElementById("platformWrap");
+          const top = data.data.top_countries;
+
+          if (!top || !top.length) {
+            wrap.innerHTML = `<div style="color:var(--muted);font-size:0.9rem;">No platform data yet.</div>`;
+            return;
+          }
+
+          const maxUSD = Math.max(...top.map((c) => c.total_usd));
+          const rows = top
+            .map(
+              (c, i) => `
+            <div style="display:flex;align-items:center;gap:1rem;padding:0.6rem 0;border-bottom:1px solid #f3f4f6;">
+              <div style="width:24px;color:var(--muted);font-size:0.85rem;font-weight:600;">#${i + 1}</div>
+              <div style="flex:1;">
+                <div style="font-size:0.9rem;color:var(--ink);font-weight:500;">
+                  ${flag(c.country)} ${c.country}
+                </div>
+                <div style="margin-top:4px;background:#f3f4f6;border-radius:3px;height:5px;overflow:hidden;">
+                  <div style="width:${Math.round((c.total_usd / maxUSD) * 100)}%;height:100%;background:#3b82f6;border-radius:3px;"></div>
+                </div>
+              </div>
+              <div style="text-align:right;min-width:100px;">
+                <div style="font-size:0.9rem;font-weight:600;color:var(--ink);">${fmtUSD(c.total_usd)}</div>
+                <div style="font-size:0.75rem;color:var(--muted);">${c.unique_users} users</div>
+              </div>
+            </div>
+          `,
+            )
+            .join("");
+
+          wrap.innerHTML = `
+            <div style="margin-bottom:0.75rem;font-size:0.85rem;color:var(--muted);">
+              Total platform volume: <strong style="color:var(--ink);">${fmtUSD(data.data.platform_total_usd)}</strong>
+              across <strong style="color:var(--ink);">${data.data.platform_count}</strong> transactions
+            </div>
+            ${rows}
+          `;
+        } catch (e) {
+          console.error("Platform stats error:", e);
+        }
+      }
+
+      // ── Seed demo data (only if DB is empty) ─────────────────────────────
+      async function seedDemoIfEmpty() {
+        // Check if user has data first
+        const res = await fetch(`/api/behaviour/stats?days=90`);
+        const data = await res.json();
+        if (data.stats && data.stats.total_transactions > 0) return; // has real data
+
+        // Seed some demo events so charts aren't empty on first load
+        const demos = [
+          {
+            from_currency: "AED",
+            to_currency: "INR",
+            to_country: "India",
+            amount_usd: 320,
+            rate: 83.5,
+          },
+          {
+            from_currency: "AED",
+            to_currency: "INR",
+            to_country: "India",
+            amount_usd: 480,
+            rate: 83.2,
+          },
+          {
+            from_currency: "AED",
+            to_currency: "PKR",
+            to_country: "Pakistan",
+            amount_usd: 210,
+            rate: 278,
+          },
+          {
+            from_currency: "AED",
+            to_currency: "INR",
+            to_country: "India",
+            amount_usd: 150,
+            rate: 83.8,
+          },
+          {
+            from_currency: "AED",
+            to_currency: "PHP",
+            to_country: "Philippines",
+            amount_usd: 600,
+            rate: 56.4,
+          },
+          {
+            from_currency: "AED",
+            to_currency: "BDT",
+            to_country: "Bangladesh",
+            amount_usd: 250,
+            rate: 109.5,
+          },
+          {
+            from_currency: "AED",
+            to_currency: "INR",
+            to_country: "India",
+            amount_usd: 900,
+            rate: 84.1,
+          },
+          {
+            from_currency: "USD",
+            to_currency: "INR",
+            to_country: "India",
+            amount_usd: 400,
+            rate: 83.6,
+          },
+        ];
+
+        for (const d of demos) {
+          await fetch("/api/behaviour/log", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(d),
+          });
+        }
+      }
+
+      // ── Init ─────────────────────────────────────────────────────────────
+      async function loadAll() {
+        await loadUserStats();
+        await loadPlatformStats();
+      }
+
+      (async () => {
+        await seedDemoIfEmpty();
+        await loadAll();
+      })();
+    </script>
+  </body>
+</html>

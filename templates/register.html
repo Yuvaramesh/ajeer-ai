@@ -71,8 +71,16 @@
       .panel-hero {
         position: relative;
         z-index: 1;
+        height: 100vh;
       }
+
+      /* 👉 Position the text block */
       .panel-hero h1 {
+        position: absolute;
+        top: 50%;
+        left: 80px; /* adjust for horizontal spacing */
+        transform: translateY(-50%);
+
         font-family: "Syne", sans-serif;
         font-weight: 800;
         font-size: 3.5rem;
@@ -81,11 +89,19 @@
         margin-bottom: 1.5rem;
         letter-spacing: -0.03em;
       }
+
+      /* keep this same */
       .panel-hero h1 em {
         font-style: normal;
         color: var(--brand);
       }
+
+      /* optional: align paragraph with heading */
       .panel-hero p {
+        position: absolute;
+        top: calc(50% + 140px); /* sits below heading */
+        left: 80px;
+
         font-size: 1.05rem;
         color: rgba(255, 255, 255, 0.55);
         line-height: 1.7;
@@ -247,28 +263,6 @@
       <div class="brand">Ajeer<span>.</span></div>
       <div class="panel-hero">
         <h1>Join the<br /><em>Future</em> of<br />Work.</h1>
-        <p>
-          Access jobs globally, get paid in your local currency, and build your
-          career with Ajeer.
-        </p>
-      </div>
-      <div class="benefits">
-        <div class="benefit">
-          <div class="benefit-icon">🌍</div>
-          Work with international employers
-        </div>
-        <div class="benefit">
-          <div class="benefit-icon">💱</div>
-          Real-time currency conversion
-        </div>
-        <div class="benefit">
-          <div class="benefit-icon">🤖</div>
-          AI-powered job matching
-        </div>
-        <div class="benefit">
-          <div class="benefit-icon">🔒</div>
-          Secure & verified payments
-        </div>
       </div>
     </div>
 
