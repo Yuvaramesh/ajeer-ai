@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
-import google.generativeai as genai
+from google import genai
 import requests
 import os
 from datetime import datetime
@@ -9,23 +9,46 @@ from functools import wraps
 from bson import ObjectId
 from dotenv import load_dotenv
 from agents import run_agent
+from behaviour_analysis import behaviour_bp, log_remittance
+from aml_analysis import aml_bp, run_aml_check
+from reports_analysis import reports_bp
 
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "ajeer-secret-key-2024")
-
+app.register_blueprint(behaviour_bp)
+app.register_blueprint(aml_bp)
+app.register_blueprint(reports_bp)
 app.config["MONGO_URI"] = os.environ.get(
     "MONGO_URI", "mongodb://localhost:27017/ajeer_db"
 )
 mongo = PyMongo(app)
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "your-gemini-api-key")
-EXCHANGE_API_KEY = os.environ.get(
-    "EXCHANGE_API_KEY", "your-exchange-api-key"
-)  # Add this
 
-genai.configure(api_key=GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel("gemini-2.5-flash-lite")
+def db_ok():
+    """Returns True if MongoDB is reachable."""
+    try:
+        mongo.cx.admin.command("ping")
+        return True
+    except Exception:
+        return False
+
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "your-gemini-api-key")
+EXCHANGE_API_KEY = os.environ.get("EXCHANGE_API_KEY", "your-exchange-api-key")
+GENERATE_MODEL = "gemini-2.5-flash-lite"
+
+_genai_client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+def _llm(prompt: str) -> str:
+    """Simple single-turn LLM call via new google.genai SDK."""
+    response = _genai_client.models.generate_content(
+        model=GENERATE_MODEL,
+        contents=prompt,
+    )
+    return response.text.strip()
+
 
 COUNTRY_CURRENCY_MAP = {
     "United States": {"code": "USD", "symbol": "$", "name": "US Dollar"},
@@ -115,8 +138,8 @@ def register():
         password = request.form.get("password", "")
         country = request.form.get("country", "Other")
 
-        if mongo.db is None:
-            error = "Database unavailable. Please start MongoDB."
+        if not db_ok():
+            error = "Database unavailable. Please check your MongoDB connection."
         elif mongo.db.users.find_one({"email": email}):
             error = "Email already registered."
         elif len(password) < 6:
@@ -159,8 +182,8 @@ def login():
         password = request.form.get("password", "")
         country = request.form.get("country", "Other")
 
-        if mongo.db is None:
-            error = "Database unavailable. Please start MongoDB and restart the server."
+        if not db_ok():
+            error = "Database unavailable. Please check your MongoDB connection."
         else:
             user = mongo.db.users.find_one({"email": email})
             if user and check_password_hash(user["password"], password):
@@ -177,6 +200,7 @@ def login():
                 session["currency_code"] = currency_info["code"]
                 session["currency_symbol"] = currency_info["symbol"]
                 session["currency_name"] = currency_info["name"]
+                session["role"] = user.get("role", "user")
 
                 # Update user document
                 try:
@@ -371,6 +395,7 @@ def convert_currency():
     amount = float(data.get("amount", 0))
     from_cur = data.get("from", "USD")
     to_cur = data.get("to", "USD")
+    to_country = data.get("to_country", "Unknown")
 
     # Use the ExchangeRate-API for conversion
     try:
@@ -379,13 +404,32 @@ def convert_currency():
         if response.status_code == 200:
             data = response.json()
             if data.get("result") == "success":
+                conv_rate = data.get("conversion_rate", 1.0)
+                log_remittance(
+                    db=mongo.db,
+                    user_id=session["user_id"],
+                    from_currency=from_cur,
+                    to_currency=to_cur,
+                    to_country=to_country,
+                    amount_usd=amount,
+                    rate=conv_rate,
+                )
+                run_aml_check(
+                    db=mongo.db,
+                    user_id=session["user_id"],
+                    from_currency=from_cur,
+                    to_currency=to_cur,
+                    to_country=to_country,
+                    amount_usd=amount,
+                    rate=conv_rate,
+                )
                 return jsonify(
                     {
                         "success": True,
                         "amount": amount,
                         "from": from_cur,
                         "to": to_cur,
-                        "rate": data.get("conversion_rate", 1.0),
+                        "rate": conv_rate,
                         "converted": data.get("conversion_result", amount),
                     }
                 )
@@ -394,6 +438,24 @@ def convert_currency():
 
     # Fallback to manual calculation
     rate = get_exchange_rate(from_cur, to_cur)
+    log_remittance(
+        db=mongo.db,
+        user_id=session["user_id"],
+        from_currency=from_cur,
+        to_currency=to_cur,
+        to_country=to_country,
+        amount_usd=amount,
+        rate=rate,
+    )
+    run_aml_check(
+        db=mongo.db,
+        user_id=session["user_id"],
+        from_currency=from_cur,
+        to_currency=to_cur,
+        to_country=to_country,
+        amount_usd=amount,
+        rate=rate,
+    )
     return jsonify(
         {
             "success": True,
@@ -425,8 +487,7 @@ def currency_insight():
     )
 
     try:
-        response = gemini_model.generate_content(prompt)
-        insight = response.text.strip()
+        insight = _llm(prompt)
 
         try:
             if mongo.db is not None:
@@ -497,6 +558,8 @@ def chat():
                 "agent_used": result.get("agent_used", ""),
                 "sources": result.get("sources", []),
                 "route": result.get("route", ""),
+                "faq_db_hit": result.get("faq_db_hit", False),
+                "rag_score": result.get("rag_score"),
             }
         )
 
