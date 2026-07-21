@@ -1,5 +1,4 @@
 # Ajeer Dashboard — Flask + MongoDB + Gemini AI
-
 A full-stack workforce management platform with:
 
 - 🔐 Login with country selection → auto currency detection
